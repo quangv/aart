@@ -60,30 +60,30 @@ export default async function ChildDetailPage({
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-sky-700">
+          <p className="text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
             Child Tracker
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+          <h1 className="mt-2 text-3xl font-bold text-[#2f2a26]">
             {child.name}
           </h1>
           {child.notes ? (
-            <p className="mt-2 text-sm text-slate-600">{child.notes}</p>
+            <p className="mt-2 text-sm text-[#5f4a37]">{child.notes}</p>
           ) : null}
         </div>
         <Link
           href="/dashboard"
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          className="rounded-lg border border-[#e8b795] bg-[#fff7ee] px-4 py-2 text-sm font-semibold text-[#5f4a37] transition hover:bg-[#ffefdf]"
         >
           Back to Dashboard
         </Link>
       </div>
 
       <section className="mt-8 grid gap-6 xl:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
-          <h2 className="text-xl font-semibold text-slate-900">
+        <div className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm xl:col-span-2">
+          <h2 className="text-xl font-semibold text-[#2f2a26]">
             Sound Mastery by Position
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-[#5f4a37]">
             Track each sound in beginning, middle, and end positions. A score of
             80+ can be marked as mastered.
           </p>
@@ -91,7 +91,7 @@ export default async function ChildDetailPage({
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-y-2 text-sm">
               <thead>
-                <tr className="text-left text-slate-600">
+                <tr className="text-left text-[#5f4a37]">
                   <th className="px-2 py-1">Sound</th>
                   <th className="px-2 py-1">Beginning</th>
                   <th className="px-2 py-1">Middle</th>
@@ -101,11 +101,11 @@ export default async function ChildDetailPage({
               <tbody>
                 {(sounds ?? []).map((sound) => (
                   <tr key={sound.id} className="align-top">
-                    <td className="rounded-l-xl bg-slate-50 px-2 py-2">
-                      <p className="font-semibold text-slate-900">
+                    <td className="rounded-l-xl bg-[#fff5eb] px-2 py-2">
+                      <p className="font-semibold text-[#2f2a26]">
                         /{sound.code}/
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[#7b6652]">
                         {sound.ipa ?? sound.label}
                       </p>
                     </td>
@@ -119,7 +119,7 @@ export default async function ChildDetailPage({
                       return (
                         <td
                           key={position}
-                          className={`bg-slate-50 px-2 py-2${edgeClass}`}
+                          className={`bg-[#fff5eb] px-2 py-2${edgeClass}`}
                         >
                           <form
                             action={upsertProgressAction}
@@ -146,7 +146,7 @@ export default async function ChildDetailPage({
                               value={`/dashboard/${childId}`}
                             />
 
-                            <label className="block text-xs text-slate-500">
+                            <label className="block text-xs text-[#7b6652]">
                               Score
                             </label>
                             <input
@@ -155,10 +155,10 @@ export default async function ChildDetailPage({
                               min={0}
                               max={100}
                               defaultValue={existing?.score ?? 0}
-                              className="w-full rounded-md border border-slate-300 px-2 py-1"
+                              className="w-full rounded-md border border-[#e8b795] px-2 py-1 outline-none ring-[#8ec7ed] transition focus:ring"
                             />
 
-                            <label className="flex items-center gap-2 text-xs text-slate-700">
+                            <label className="flex items-center gap-2 text-xs text-[#5f4a37]">
                               <input
                                 name="mastered"
                                 type="checkbox"
@@ -169,12 +169,12 @@ export default async function ChildDetailPage({
 
                             <button
                               type="submit"
-                              className="w-full rounded-md bg-cyan-700 px-2 py-1 text-xs font-semibold text-white hover:bg-cyan-600"
+                              className="w-full rounded-md bg-[#2d78c4] px-2 py-1 text-xs font-semibold text-white hover:bg-[#2367aa]"
                             >
                               Save
                             </button>
 
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-[11px] text-[#7b6652]">
                               Attempts: {existing?.attempts ?? 0}
                             </p>
                           </form>
@@ -189,11 +189,11 @@ export default async function ChildDetailPage({
         </div>
 
         <div className="space-y-6 xl:col-span-1">
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">
+          <section className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-[#2f2a26]">
               Suggested Words
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[#5f4a37]">
               Generated from sounds currently mastered for this child.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -201,52 +201,55 @@ export default async function ChildDetailPage({
                 recommendations.words.map((word) => (
                   <span
                     key={word.id}
-                    className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-sm text-cyan-800"
+                    className="rounded-full border border-[#b8d696] bg-[#f0f9e5] px-3 py-1 text-sm text-[#5a7f44]"
                   >
                     {word.text}
                   </span>
                 ))
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#7b6652]">
                   No available words yet. Mark more sounds as mastered.
                 </p>
               )}
             </div>
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">
+          <section className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-[#2f2a26]">
               Phrase Builder
             </h2>
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+            <ul className="mt-3 space-y-2 text-sm text-[#5f4a37]">
               {recommendations.phrases.length ? (
                 recommendations.phrases.map((phrase) => (
-                  <li key={phrase} className="rounded-lg bg-slate-50 px-3 py-2">
+                  <li
+                    key={phrase}
+                    className="rounded-lg bg-[#fff5eb] px-3 py-2"
+                  >
                     {phrase}
                   </li>
                 ))
               ) : (
-                <li className="text-slate-500">No phrase suggestions yet.</li>
+                <li className="text-[#7b6652]">No phrase suggestions yet.</li>
               )}
             </ul>
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">
+          <section className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-[#2f2a26]">
               Sentence Builder
             </h2>
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+            <ul className="mt-3 space-y-2 text-sm text-[#5f4a37]">
               {recommendations.sentences.length ? (
                 recommendations.sentences.map((sentence) => (
                   <li
                     key={sentence}
-                    className="rounded-lg bg-slate-50 px-3 py-2"
+                    className="rounded-lg bg-[#fff5eb] px-3 py-2"
                   >
                     {sentence}
                   </li>
                 ))
               ) : (
-                <li className="text-slate-500">No sentence suggestions yet.</li>
+                <li className="text-[#7b6652]">No sentence suggestions yet.</li>
               )}
             </ul>
           </section>
@@ -254,7 +257,7 @@ export default async function ChildDetailPage({
       </section>
 
       {message ? (
-        <p className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <p className="mt-6 rounded-lg border border-[#ffd66b] bg-[#fff7de] px-3 py-2 text-sm text-[#7a5b16]">
           {message}
         </p>
       ) : null}
