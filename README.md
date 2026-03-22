@@ -52,6 +52,7 @@ Set:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_DB_URL` (since no ip4 address use `session pooler` url)
+- `NEXT_PUBLIC_SITE_URL` (optional but recommended; used for password reset email redirects)
 
 Example `.env.local` values:
 
@@ -94,6 +95,15 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+6. Configure Supabase Auth redirect URLs (required for forgot password)
+
+- Supabase Dashboard -> Authentication -> URL Configuration
+- Add Site URL (local/dev): `http://localhost:3000`
+- Add Redirect URL (local/dev): `http://localhost:3000/auth/confirm`
+- Add production equivalents when deployed:
+  - `https://aart.autismarcade.com`
+  - `https://aart.autismarcade.com/auth/confirm`
 
 ## Database Migrations (Supabase CLI)
 
@@ -142,6 +152,8 @@ Notes:
 - `/` landing
 - `/signup` parent registration
 - `/login` parent login
+- `/forgot-password` request reset link
+- `/reset-password` set a new password after email verification
 - `/dashboard` child profile list and creation
 - `/dashboard/[childId]` sound progress tracking + recommendations
 

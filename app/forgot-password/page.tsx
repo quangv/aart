@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { loginAction } from "@/app/auth/actions";
+import { requestPasswordResetAction } from "@/app/auth/actions";
 
-export default async function LoginPage({
+export default async function ForgotPasswordPage({
   searchParams,
 }: {
   searchParams: Promise<{ message?: string }>;
@@ -10,13 +10,13 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-10">
-      <h1 className="text-3xl font-bold text-[#2f2a26]">Parent Login</h1>
+      <h1 className="text-3xl font-bold text-[#2f2a26]">Forgot Password</h1>
       <p className="mt-2 text-sm text-[#5f4a37]">
-        Log in to manage your child profiles and articulation progress.
+        Enter your email and we will send a secure link to reset your password.
       </p>
 
       <form
-        action={loginAction}
+        action={requestPasswordResetAction}
         className="mt-8 space-y-4 rounded-2xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm"
       >
         <div>
@@ -35,37 +35,11 @@ export default async function LoginPage({
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="password"
-            className="mb-1 block text-sm font-medium text-[#5f4a37]"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            minLength={6}
-            className="w-full rounded-lg border border-[#e8b795] px-3 py-2 outline-none ring-[#8ec7ed] transition focus:ring"
-          />
-        </div>
-
-        <p className="text-right text-sm">
-          <Link
-            className="font-semibold text-[#2d78c4] hover:underline"
-            href="/forgot-password"
-          >
-            Forgot password?
-          </Link>
-        </p>
-
         <button
           type="submit"
           className="w-full rounded-lg bg-[#2d78c4] px-4 py-2 font-semibold text-white transition hover:bg-[#2367aa]"
         >
-          Log In
+          Send Reset Link
         </button>
       </form>
 
@@ -76,12 +50,12 @@ export default async function LoginPage({
       ) : null}
 
       <p className="mt-6 text-sm text-[#5f4a37]">
-        Need an account?{" "}
+        Remembered your password?{" "}
         <Link
           className="font-semibold text-[#2d78c4] hover:underline"
-          href="/signup"
+          href="/login"
         >
-          Sign up
+          Back to login
         </Link>
       </p>
     </main>
