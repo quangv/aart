@@ -52,8 +52,8 @@ export default function Home() {
 
             <div className="mt-6 overflow-hidden rounded-2xl border border-[#efc8ab] bg-[#fff7ee] p-3">
               <Image
-                src="/aart-mascot.svg"
-                alt="Aart the aardvark mascot"
+                src="/aart-home.png"
+                alt="Aart the aardvark hero illustration"
                 width={720}
                 height={640}
                 priority
