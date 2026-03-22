@@ -109,6 +109,8 @@ Open `http://localhost:3000`.
 
 This repo now includes a baseline migration at [supabase/migrations/20260322000100_init.sql](supabase/migrations/20260322000100_init.sql).
 
+If you see child insert foreign key errors for older accounts, apply latest migrations (including [supabase/migrations/20260322000300_profiles_self_insert_policy.sql](supabase/migrations/20260322000300_profiles_self_insert_policy.sql)).
+
 Use these commands for schema changes:
 
 ```bash
@@ -172,6 +174,8 @@ npm run deploy:link
 ```bash
 npm run deploy
 ```
+
+If your repository is connected to Vercel Git integration, every push to `main` triggers an automatic production deploy (no manual deploy command needed).
 
 5. Add the custom domain in Vercel:
 

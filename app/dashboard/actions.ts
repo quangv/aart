@@ -23,6 +23,21 @@ export async function addChildAction(formData: FormData) {
     redirect("/login");
   }
 
+  const { error: profileError } = await supabase.from("profiles").upsert(
+    {
+      id: user.id,
+      full_name:
+        (user.user_metadata?.full_name as string | undefined) ||
+        user.email ||
+        null,
+    },
+    { onConflict: "id" },
+  );
+
+  if (profileError) {
+    redirect(`/dashboard?message=${encodeURIComponent(profileError.message)}`);
+  }
+
   const { error } = await supabase.from("children").insert({
     parent_id: user.id,
     name,

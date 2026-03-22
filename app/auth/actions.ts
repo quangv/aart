@@ -34,7 +34,7 @@ export async function signUpAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -44,6 +44,20 @@ export async function signUpAction(formData: FormData) {
 
   if (error) {
     redirect(`/signup?message=${encodeURIComponent(error.message)}`);
+  }
+
+  if (data.user) {
+    await supabase.from("profiles").upsert(
+      {
+        id: data.user.id,
+        full_name:
+          fullName ||
+          (data.user.user_metadata?.full_name as string | undefined) ||
+          data.user.email ||
+          null,
+      },
+      { onConflict: "id" },
+    );
   }
 
   revalidatePath("/", "layout");
@@ -59,13 +73,26 @@ export async function loginAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
     redirect(`/login?message=${encodeURIComponent(error.message)}`);
+  }
+
+  if (data.user) {
+    await supabase.from("profiles").upsert(
+      {
+        id: data.user.id,
+        full_name:
+          (data.user.user_metadata?.full_name as string | undefined) ||
+          data.user.email ||
+          null,
+      },
+      { onConflict: "id" },
+    );
   }
 
   revalidatePath("/", "layout");
