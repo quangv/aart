@@ -79,6 +79,8 @@ SUPABASE_DB_URL=postgresql://postgres.gayindulqnrngbpuqixl:K%40%23oJl14%25PKYE3@
 supabase link --project-ref <your-project-ref>
 ```
 
+`project-ref` is your Supabase project id (for example: `gayindulqnrngbpuqixl`).
+
 4. Apply database migrations
 
 ```bash
@@ -153,3 +155,13 @@ Notes:
 ## Important Next Step
 
 Seed your `words` and `word_sounds` tables with your articulation curriculum data so recommendation quality improves immediately.
+
+## Project Init Steps
+
+1.Run the SQL in schema.sql in your Supabase project.
+
+2. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to local env and Vercel env.
+
+3. Seed words + sound mappings (I can generate a starter import format and seed script next).
+
+4. Configure aart.autismarcade.com in Vercel Domains and point DNS CNAME accordingly.
