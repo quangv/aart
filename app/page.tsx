@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -23,13 +24,13 @@ export default function Home() {
           <div className="flex gap-3">
             <Link
               href="/login"
-              className="rounded-full border border-[#e8b795] bg-[#fffdf8] px-5 py-2 text-sm font-semibold text-[#5f4a37] transition hover:bg-[#fff3e7]"
+              className="aart-btn-secondary rounded-full px-5 py-2 text-sm font-semibold"
             >
               Parent Login
             </Link>
             <Link
               href="/signup"
-              className="rounded-full bg-[#2d78c4] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#2367aa]"
+              className="aart-btn-primary rounded-full px-5 py-2 text-sm font-semibold"
             >
               Parent Signup
             </Link>
@@ -37,7 +38,7 @@ export default function Home() {
         </header>
 
         <section className="mt-12 grid gap-6 lg:grid-cols-3">
-          <article className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8]/90 p-6 backdrop-blur-sm lg:col-span-2">
+          <article className="aart-card rounded-3xl p-6 backdrop-blur-sm lg:col-span-2">
             <h2 className="font-space-grotesk text-2xl font-bold text-[#2f2a26] md:text-3xl">
               Track each sound where it matters most: beginning, middle, and
               end.
@@ -49,8 +50,19 @@ export default function Home() {
               already say well.
             </p>
 
+            <div className="mt-6 overflow-hidden rounded-2xl border border-[#efc8ab] bg-[#fff7ee] p-3">
+              <Image
+                src="/aart-mascot.svg"
+                alt="Aart the aardvark mascot"
+                width={720}
+                height={640}
+                priority
+                className="h-auto w-full rounded-xl"
+              />
+            </div>
+
             <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-[#f0dac9] bg-[#fff5eb] p-4">
+              <div className="aart-card-soft rounded-2xl p-4">
                 <p className="text-sm font-semibold text-[#2d78c4]">
                   Speech Targets
                 </p>
@@ -58,7 +70,7 @@ export default function Home() {
                   Track attempts, scores, and mastery by position.
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#f0dac9] bg-[#fff5eb] p-4">
+              <div className="aart-card-soft rounded-2xl p-4">
                 <p className="text-sm font-semibold text-[#2d78c4]">
                   Word Intelligence
                 </p>
@@ -66,7 +78,7 @@ export default function Home() {
                   Store reading level, part of speech, and sound maps.
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#f0dac9] bg-[#fff5eb] p-4">
+              <div className="aart-card-soft rounded-2xl p-4">
                 <p className="text-sm font-semibold text-[#2d78c4]">
                   Auto Suggestions
                 </p>
@@ -77,7 +89,7 @@ export default function Home() {
             </div>
           </article>
 
-          <article className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm">
+          <article className="aart-card rounded-3xl p-6">
             <p className="text-sm uppercase tracking-[0.25em] text-[#7ba35f]">
               Deployment
             </p>
@@ -88,9 +100,20 @@ export default function Home() {
               Designed for deployment at aart.autismarcade.com with secure
               parent auth and RLS-backed data.
             </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+              <span className="aart-chip-info rounded-full px-3 py-1">
+                Aart Blue
+              </span>
+              <span className="aart-chip-success rounded-full px-3 py-1">
+                Leaf Green
+              </span>
+              <span className="aart-chip-warning rounded-full px-3 py-1">
+                Star Yellow
+              </span>
+            </div>
             <Link
               href="/dashboard"
-              className="mt-5 inline-flex rounded-lg bg-[#2d78c4] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2367aa]"
+              className="aart-btn-primary mt-5 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
             >
               Open Dashboard
             </Link>

@@ -40,3 +40,58 @@ h4 {
   background: #ffe59a;
   color: #3b2f22;
 }
+
+.aart-card {
+  border: 1px solid #efc8ab;
+  background: color-mix(in oklab, var(--aart-card) 92%, white 8%);
+  box-shadow: 0 10px 24px rgba(103, 74, 49, 0.08);
+}
+
+.aart-card-soft {
+  border: 1px solid #f0dac9;
+  background: #fff5eb;
+}
+
+.aart-btn-primary {
+  background: var(--aart-blue-deep);
+  color: white;
+  transition: background-color 180ms ease;
+}
+
+.aart-btn-primary:hover {
+  background: #2367aa;
+}
+
+.aart-btn-secondary {
+  border: 1px solid #e8b795;
+  background: #fff7ee;
+  color: #5f4a37;
+  transition: background-color 180ms ease;
+}
+
+.aart-btn-secondary:hover {
+  background: #ffefdf;
+}
+
+.aart-focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(142, 199, 237, 0.5);
+}
+
+.aart-chip-info {
+  border: 1px solid #b2d8f4;
+  background: #eaf6ff;
+  color: #2d78c4;
+}
+
+.aart-chip-success {
+  border: 1px solid #b8d696;
+  background: #f0f9e5;
+  color: #5a7f44;
+}
+
+.aart-chip-warning {
+  border: 1px solid #ffd66b;
+  background: #fff7de;
+  color: #7a5b16;
+}
