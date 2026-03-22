@@ -149,8 +149,37 @@ Notes:
 
 1. Create a Vercel project from this repository.
 2. Set the same env vars in Vercel project settings.
-3. Deploy.
-4. In your DNS provider, add a CNAME for `aart.autismarcade.com` to your Vercel target and add the domain in Vercel.
+3. Link local repo to the Vercel project once:
+
+```bash
+npm run deploy:link
+```
+
+4. Deploy to production with one command:
+
+```bash
+npm run deploy
+```
+
+5. Add the custom domain in Vercel:
+
+- Vercel dashboard -> Project -> Settings -> Domains
+- Add `aart.autismarcade.com`
+
+6. Point DNS CNAME in your DNS provider:
+
+- Type: `CNAME`
+- Name/Host: `aart`
+- Value/Target: `cname.vercel-dns.com`
+- TTL: Auto/default
+
+7. Wait for DNS propagation, then verify domain status in Vercel turns to valid.
+
+Notes:
+
+- Use only a CNAME for subdomain `aart` (do not add A/AAAA records for the same host).
+- If proxy mode exists in your DNS provider (for example Cloudflare), start with DNS only mode until verification passes.
+- For future deploys, `npm run deploy` is enough.
 
 ## Important Next Step
 
