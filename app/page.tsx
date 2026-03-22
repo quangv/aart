@@ -53,7 +53,7 @@ export default function Home() {
             <div className="mt-6 overflow-hidden rounded-2xl border border-[#efc8ab] bg-[#fff7ee] p-3">
               <Image
                 src="/aart-home.png"
-                alt="Aart the aardvark hero illustration"
+                alt="Aart the aardvark reading on a tablet, surrounded by letters and stars, representing playful word mastery practice"
                 width={720}
                 height={640}
                 priority
