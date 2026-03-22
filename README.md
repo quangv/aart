@@ -51,6 +51,27 @@ Set:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_DB_URL` (since no ip4 address use `session pooler` url)
+
+Example `.env.local` values:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://gayindulqnrngbpuqixl.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.EXAMPLE_PAYLOAD.EXAMPLE_SIGNATURE
+SUPABASE_DB_URL=postgresql://postgres.gayindulqnrngbpuqixl:YOUR_DB_PASSWORD@aws-1-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+```
+
+If your DB password contains special URL characters, URL-encode it before putting it in `SUPABASE_DB_URL`.
+
+- `@` -> `%40`
+- `#` -> `%23`
+- `%` -> `%25`
+
+Example encoded password:
+
+```dotenv
+SUPABASE_DB_URL=postgresql://postgres.gayindulqnrngbpuqixl:K%40%23oJl14%25PKYE3@aws-1-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+```
 
 3. Link this repo to your Supabase project
 
@@ -100,6 +121,11 @@ npm run db:reset
 
 # pull remote schema into a new migration (for changes made in dashboard)
 # use when you manually edited tables in Supabase dashboard
+npm run db:pull
+
+# db:push and db:pull read SUPABASE_DB_URL from .env.local
+# useful on WSL/network setups where direct db.<project-ref> host fails
+npm run db:push
 npm run db:pull
 ```
 

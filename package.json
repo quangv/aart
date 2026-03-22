@@ -11,8 +11,8 @@
     "db:stop": "supabase stop",
     "db:status": "supabase status",
     "db:reset": "supabase db reset",
-    "db:push": "supabase db push",
-    "db:pull": "supabase db pull",
+    "db:push": "bash -lc 'set -a && source .env.local && set +a && supabase db push --db-url \"$SUPABASE_DB_URL\"'",
+    "db:pull": "bash -lc 'set -a && source .env.local && set +a && supabase db pull --db-url \"$SUPABASE_DB_URL\"'",
     "db:migration:new": "supabase migration new"
   },
   "dependencies": {
