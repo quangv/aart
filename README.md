@@ -52,17 +52,61 @@ Set:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-3. Create database schema in Supabase SQL editor
+3. Link this repo to your Supabase project
 
-- Run [supabase/schema.sql](supabase/schema.sql)
+```bash
+supabase link --project-ref <your-project-ref>
+```
 
-4. Start development server
+4. Apply database migrations
+
+```bash
+npm run db:push
+```
+
+5. Start development server
 
 ```bash
 npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+## Database Migrations (Supabase CLI)
+
+This repo now includes a baseline migration at [supabase/migrations/20260322000100_init.sql](supabase/migrations/20260322000100_init.sql).
+
+Use these commands for schema changes:
+
+```bash
+# create a new migration file
+npm run db:migration:new -- add_child_avatar
+
+# edit the generated SQL in supabase/migrations/<timestamp>_add_child_avatar.sql
+
+# apply pending migrations to linked remote project
+npm run db:push
+```
+
+Useful commands:
+
+```bash
+# start/stop local Supabase stack
+npm run db:start
+npm run db:stop
+
+# rebuild local db from migrations + seed.sql
+npm run db:reset
+
+# pull remote schema into a new migration (for changes made in dashboard)
+npm run db:pull
+```
+
+Notes:
+
+- Prefer migrations over editing Supabase tables directly in the dashboard.
+- If you do edit schema in the dashboard, run `npm run db:pull` and commit the generated migration.
+- [supabase/schema.sql](supabase/schema.sql) is kept as a reference snapshot of the initial schema.
 
 ## Current Routes
 
