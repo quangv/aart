@@ -102,12 +102,12 @@ export default async function DashboardPage({
                 htmlFor="birthDate"
                 className="mb-1 block text-sm font-medium text-[#5f4a37]"
               >
-                Birth Date
+                Birth Month/Year
               </label>
               <input
                 id="birthDate"
                 name="birthDate"
-                type="date"
+                type="month"
                 className="w-full rounded-lg border border-[#e8b795] px-3 py-2 outline-none ring-[#8ec7ed] transition focus:ring"
               />
             </div>
