@@ -99,6 +99,7 @@ npm run db:stop
 npm run db:reset
 
 # pull remote schema into a new migration (for changes made in dashboard)
+# use when you manually edited tables in Supabase dashboard
 npm run db:pull
 ```
 
