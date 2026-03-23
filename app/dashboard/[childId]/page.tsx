@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { upsertProgressAction } from "@/app/dashboard/actions";
 import { createClient } from "@/lib/supabase/server";
@@ -58,24 +57,14 @@ export default async function ChildDetailPage({
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
-            Child Tracker
-          </p>
-          <h1 className="mt-2 text-3xl font-bold text-[#2f2a26]">
-            {child.name}
-          </h1>
-          {child.notes ? (
-            <p className="mt-2 text-sm text-[#5f4a37]">{child.notes}</p>
-          ) : null}
-        </div>
-        <Link
-          href="/dashboard"
-          className="rounded-lg border border-[#e8b795] bg-[#fff7ee] px-4 py-2 text-sm font-semibold text-[#5f4a37] transition hover:bg-[#ffefdf]"
-        >
-          Back to Dashboard
-        </Link>
+      <div>
+        <p className="text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
+          Child Tracker
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-[#2f2a26]">{child.name}</h1>
+        {child.notes ? (
+          <p className="mt-2 text-sm text-[#5f4a37]">{child.notes}</p>
+        ) : null}
       </div>
 
       <section className="mt-8 grid gap-6 xl:grid-cols-3">

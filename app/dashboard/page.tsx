@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { logoutAction } from "@/app/auth/actions";
 import { addChildAction } from "@/app/dashboard/actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,15 +63,6 @@ export default async function DashboardPage({
             confidence-safe suggestions.
           </p>
         </div>
-
-        <form action={logoutAction}>
-          <button
-            type="submit"
-            className="rounded-lg border border-[#e8b795] bg-[#fff7ee] px-4 py-2 text-sm font-semibold text-[#5f4a37] transition hover:bg-[#ffefdf]"
-          >
-            Log Out
-          </button>
-        </form>
       </header>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-3">
