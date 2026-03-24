@@ -1,6 +1,8 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getRecommendationsForChild } from "@/lib/recommendations";
+import { clearLastChildAction } from "@/app/dashboard/actions";
 import SoundGrid from "./_components/sound-grid";
 
 export default async function ChildDetailPage({
@@ -30,7 +32,27 @@ export default async function ChildDetailPage({
     .maybeSingle();
 
   if (!child) {
-    notFound();
+    return (
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-6 py-16">
+        <div className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-8 text-center shadow-sm">
+          <p className="text-lg font-semibold text-[#2f2a26]">
+            Profile not found
+          </p>
+          <p className="mt-2 text-sm text-[#5f4a37]">
+            This child profile doesn&apos;t exist or you don&apos;t have access
+            to it.
+          </p>
+          <form action={clearLastChildAction} className="mt-6">
+            <button
+              type="submit"
+              className="rounded-lg bg-[#2d78c4] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2367aa]"
+            >
+              Back to Profiles
+            </button>
+          </form>
+        </div>
+      </main>
+    );
   }
 
   const { data: sounds } = await supabase
@@ -142,7 +164,13 @@ export default async function ChildDetailPage({
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-8">
       <div>
-        <p className="text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
+        <Link
+          href="/dashboard?manage=1"
+          className="inline-flex items-center gap-1 text-sm text-[#2d78c4] hover:underline"
+        >
+          ← Profiles
+        </Link>
+        <p className="mt-3 text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
           Child Tracker
         </p>
         <h1 className="mt-2 text-3xl font-bold text-[#2f2a26]">{child.name}</h1>

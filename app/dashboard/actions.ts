@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export async function addChildAction(formData: FormData) {
@@ -108,4 +109,10 @@ export async function upsertProgressAction(formData: FormData) {
 
   revalidatePath(returnPath);
   redirect(returnPath);
+}
+
+export async function clearLastChildAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete("last_child_id");
+  redirect("/dashboard?manage=1");
 }

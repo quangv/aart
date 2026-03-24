@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { addChildAction } from "@/app/dashboard/actions";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ message?: string; manage?: string }>;
 }) {
-  const { message } = await searchParams;
+  const { message, manage } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -32,6 +33,24 @@ export default async function DashboardPage({
     .order("created_at", { ascending: false });
 
   const childIds = (children ?? []).map((child) => child.id);
+
+  // Redirect to the last used child tracker if profiles exist and the user
+  // didn't explicitly navigate here to manage profiles.
+  let staleCookie = false;
+  if (!manage && (children ?? []).length > 0) {
+    const cookieStore = await cookies();
+    const lastChildId = cookieStore.get("last_child_id")?.value;
+    const matchingChild = (children ?? []).find((c) => c.id === lastChildId);
+    if (matchingChild) {
+      redirect(`/dashboard/${matchingChild.id}`);
+    } else if (!lastChildId) {
+      redirect(`/dashboard/${children![0].id}`);
+    } else {
+      // lastChildId exists but doesn't match any child — stale cookie.
+      staleCookie = true;
+    }
+  }
+
   const { data: progressRows } = childIds.length
     ? await supabase
         .from("child_sound_progress")
@@ -53,7 +72,7 @@ export default async function DashboardPage({
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
-            Aart Dashboard
+            Profiles
           </p>
           <h1 className="mt-2 text-3xl font-bold text-[#2f2a26]">
             Welcome, {profile?.full_name || user.email}
@@ -174,6 +193,12 @@ export default async function DashboardPage({
           ) : null}
         </div>
       </section>
+
+      {staleCookie ? (
+        <p className="mt-6 rounded-lg border border-[#ffd66b] bg-[#fff7de] px-3 py-2 text-sm text-[#7a5b16]">
+          The last opened profile could not be found. Select a profile below.
+        </p>
+      ) : null}
 
       {message ? (
         <p className="mt-6 rounded-lg border border-[#ffd66b] bg-[#fff7de] px-3 py-2 text-sm text-[#7a5b16]">
