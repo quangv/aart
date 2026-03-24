@@ -18,6 +18,7 @@
     "db:migrate:local": "supabase migration up",
     "db:reset:local": "supabase db reset",
     "db:push:prod": "bash -lc 'set -a && source .env.prod && set +a && supabase db push --db-url \"$SUPABASE_DB_URL\"'",
+    "db:push:all": "npm run db:migrate:local && npm run db:push:prod",
     "db:pull:prod": "bash -lc 'set -a && source .env.prod && set +a && supabase db pull --db-url \"$SUPABASE_DB_URL\"'",
     "db:start": "npm run db:start:local",
     "db:stop": "npm run db:stop:local",
