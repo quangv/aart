@@ -23,7 +23,7 @@ type Props = {
     stage_name: string;
   };
   progress: Partial<Record<(typeof positions)[number], ProgressRow>>;
-  exampleWords: string[];
+  exampleWordsByPosition: Partial<Record<(typeof positions)[number], string[]>>;
   progressAction?: (formData: FormData) => void | Promise<void>;
 };
 
@@ -33,7 +33,7 @@ export default function SoundModal({
   childId,
   sound,
   progress,
-  exampleWords,
+  exampleWordsByPosition,
   progressAction,
 }: Props) {
   const [scores, setScores] = useState<Record<string, number>>({
@@ -89,6 +89,7 @@ export default function SoundModal({
             <div className="mt-6 space-y-4">
               {positions.map((position) => {
                 const row = progress[position];
+                const exampleWords = exampleWordsByPosition[position] ?? [];
                 return (
                   <form key={position} action={formAction}>
                     <input type="hidden" name="childId" value={childId} />
@@ -145,32 +146,32 @@ export default function SoundModal({
                           {row.attempts} attempt{row.attempts !== 1 ? "s" : ""}
                         </p>
                       ) : null}
+
+                      <div className="mt-3 border-t border-[#f7dfce] pt-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7b6652]">
+                          Example words ({position})
+                        </p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {exampleWords.length ? (
+                            exampleWords.map((word) => (
+                              <span
+                                key={word}
+                                className="rounded-full bg-[#fff5eb] px-2 py-0.5 text-[11px] text-[#5f4a37]"
+                              >
+                                {word}
+                              </span>
+                            ))
+                          ) : (
+                            <p className="text-[11px] text-[#7b6652]">
+                              No examples yet.
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </form>
                 );
               })}
-            </div>
-
-            <div className="mt-6 border-t border-[#efc8ab] pt-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#5f4a37]">
-                Example Words
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {exampleWords.length ? (
-                  exampleWords.map((word) => (
-                    <span
-                      key={word}
-                      className="rounded-full bg-[#fff5eb] px-3 py-1 text-sm text-[#5f4a37]"
-                    >
-                      {word}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-sm text-[#7b6652]">
-                    No example words available yet for this phoneme.
-                  </p>
-                )}
-              </div>
             </div>
           </DialogPanel>
         </div>

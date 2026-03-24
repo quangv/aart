@@ -34,14 +34,14 @@ type Props = {
   childId: string;
   stageGroups: StageGroup[];
   progressRecord: Record<string, ProgressRow>;
-  exampleWordsBySoundId: Record<string, string[]>;
+  exampleWordsBySoundPosition: Record<string, string[]>;
 };
 
 export default function SoundGrid({
   childId,
   stageGroups,
   progressRecord,
-  exampleWordsBySoundId,
+  exampleWordsBySoundPosition,
 }: Props) {
   const [selectedSound, setSelectedSound] = useState<SoundRow | null>(null);
 
@@ -82,7 +82,14 @@ export default function SoundGrid({
           onClose={() => setSelectedSound(null)}
           childId={childId}
           sound={selectedSound}
-          exampleWords={exampleWordsBySoundId[selectedSound.id] ?? []}
+          exampleWordsByPosition={{
+            beginning:
+              exampleWordsBySoundPosition[`${selectedSound.id}:beginning`] ??
+              [],
+            middle:
+              exampleWordsBySoundPosition[`${selectedSound.id}:middle`] ?? [],
+            end: exampleWordsBySoundPosition[`${selectedSound.id}:end`] ?? [],
+          }}
           progressAction={upsertProgressAction}
           progress={{
             beginning: progressRecord[`${selectedSound.id}:beginning`],

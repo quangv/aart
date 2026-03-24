@@ -55,7 +55,7 @@ export default async function ChildDetailPage({
 
   const { data: wordSoundRows } = await supabase
     .from("word_sounds")
-    .select("sound_id, word_id");
+    .select("sound_id, word_id, position");
 
   const progressRecord: Record<
     string,
@@ -77,10 +77,11 @@ export default async function ChildDetailPage({
     });
   }
 
-  const exampleWordsBySoundId: Record<string, string[]> = {};
+  const exampleWordsBySoundPosition: Record<string, string[]> = {};
   for (const row of wordSoundRows ?? []) {
     const soundId = row.sound_id;
-    if (!soundId) {
+    const position = row.position;
+    if (!soundId || !position) {
       continue;
     }
 
@@ -89,10 +90,11 @@ export default async function ChildDetailPage({
       continue;
     }
 
-    const existing = exampleWordsBySoundId[soundId] ?? [];
+    const key = `${soundId}:${position}`;
+    const existing = exampleWordsBySoundPosition[key] ?? [];
     if (!existing.includes(word.text) && existing.length < 6) {
       existing.push(word.text);
-      exampleWordsBySoundId[soundId] = existing;
+      exampleWordsBySoundPosition[key] = existing;
     }
   }
 
@@ -163,7 +165,7 @@ export default async function ChildDetailPage({
             childId={childId}
             stageGroups={stageGroups}
             progressRecord={progressRecord}
-            exampleWordsBySoundId={exampleWordsBySoundId}
+            exampleWordsBySoundPosition={exampleWordsBySoundPosition}
           />
         </div>
 
