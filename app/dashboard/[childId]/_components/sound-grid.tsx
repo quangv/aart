@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { upsertProgressAction } from "@/app/dashboard/actions";
+import PhonemeButton from "./phoneme-button";
 import SoundModal from "./sound-modal";
 
 const positions = ["beginning", "middle", "end"] as const;
@@ -32,12 +34,14 @@ type Props = {
   childId: string;
   stageGroups: StageGroup[];
   progressRecord: Record<string, ProgressRow>;
+  exampleWordsBySoundId: Record<string, string[]>;
 };
 
 export default function SoundGrid({
   childId,
   stageGroups,
   progressRecord,
+  exampleWordsBySoundId,
 }: Props) {
   const [selectedSound, setSelectedSound] = useState<SoundRow | null>(null);
 
@@ -58,21 +62,13 @@ export default function SoundGrid({
                   (pos) => progressRecord[`${sound.id}:${pos}`]?.mastered,
                 );
                 return (
-                  <button
+                  <PhonemeButton
                     key={sound.id}
-                    type="button"
                     onClick={() => setSelectedSound(sound)}
-                    className={`flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 font-semibold transition hover:scale-105 ${
-                      isMastered
-                        ? "border-[#b8d696] bg-[#f0f9e5] text-[#5a7f44]"
-                        : "border-[#efc8ab] bg-[#fff5eb] text-[#2f2a26] hover:border-[#2d78c4]"
-                    }`}
-                  >
-                    <span className="text-xl">{sound.ipa}</span>
-                    <span className="mt-1 px-1 text-center text-[10px] leading-tight text-[#7b6652]">
-                      {sound.label}
-                    </span>
-                  </button>
+                    ipa={sound.ipa}
+                    label={sound.label}
+                    mastered={isMastered}
+                  />
                 );
               })}
             </div>
@@ -86,6 +82,8 @@ export default function SoundGrid({
           onClose={() => setSelectedSound(null)}
           childId={childId}
           sound={selectedSound}
+          exampleWords={exampleWordsBySoundId[selectedSound.id] ?? []}
+          progressAction={upsertProgressAction}
           progress={{
             beginning: progressRecord[`${selectedSound.id}:beginning`],
             middle: progressRecord[`${selectedSound.id}:middle`],

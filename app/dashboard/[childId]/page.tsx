@@ -47,6 +47,16 @@ export default async function ChildDetailPage({
     .select("sound_id, position, score, attempts, mastered, last_practiced_at")
     .eq("child_id", childId);
 
+  const { data: wordRows } = await supabase
+    .from("words")
+    .select("id, text, reading_level")
+    .order("reading_level", { ascending: true })
+    .order("text", { ascending: true });
+
+  const { data: wordSoundRows } = await supabase
+    .from("word_sounds")
+    .select("sound_id, word_id");
+
   const progressRecord: Record<
     string,
     { score: number | null; attempts: number | null; mastered: boolean | null }
@@ -57,6 +67,33 @@ export default async function ChildDetailPage({
       attempts: row.attempts,
       mastered: row.mastered,
     };
+  }
+
+  const wordById = new Map<string, { text: string; reading_level: number }>();
+  for (const word of wordRows ?? []) {
+    wordById.set(word.id, {
+      text: word.text,
+      reading_level: word.reading_level,
+    });
+  }
+
+  const exampleWordsBySoundId: Record<string, string[]> = {};
+  for (const row of wordSoundRows ?? []) {
+    const soundId = row.sound_id;
+    if (!soundId) {
+      continue;
+    }
+
+    const word = wordById.get(row.word_id);
+    if (!word) {
+      continue;
+    }
+
+    const existing = exampleWordsBySoundId[soundId] ?? [];
+    if (!existing.includes(word.text) && existing.length < 6) {
+      existing.push(word.text);
+      exampleWordsBySoundId[soundId] = existing;
+    }
   }
 
   const recommendations = await getRecommendationsForChild(supabase, childId);
@@ -77,34 +114,26 @@ export default async function ChildDetailPage({
     sounds: SoundRow[];
   }[] = [];
   for (const sound of sounds ?? []) {
+    const normalizedSound: SoundRow = {
+      id: sound.id,
+      code: sound.code,
+      label: sound.label ?? sound.code,
+      ipa: sound.ipa ?? sound.label,
+      stage_number: sound.stage_number,
+      stage_name: sound.stage_name ?? "",
+      stage_focus: sound.stage_focus ?? "",
+    };
+
     const last = stageGroups[stageGroups.length - 1];
-    if (!last || last.stageNumber !== sound.stage_number) {
+    if (!last || last.stageNumber !== normalizedSound.stage_number) {
       stageGroups.push({
-        stageNumber: sound.stage_number,
-        stageName: sound.stage_name,
-        stageFocus: sound.stage_focus,
-        sounds: [
-          {
-            id: sound.id,
-            code: sound.code,
-            label: sound.label,
-            ipa: sound.ipa,
-            stage_number: sound.stage_number,
-            stage_name: sound.stage_name,
-            stage_focus: sound.stage_focus,
-          },
-        ],
+        stageNumber: normalizedSound.stage_number,
+        stageName: normalizedSound.stage_name,
+        stageFocus: normalizedSound.stage_focus,
+        sounds: [normalizedSound],
       });
     } else {
-      last.sounds.push({
-        id: sound.id,
-        code: sound.code,
-        label: sound.label,
-        ipa: sound.ipa,
-        stage_number: sound.stage_number,
-        stage_name: sound.stage_name,
-        stage_focus: sound.stage_focus,
-      });
+      last.sounds.push(normalizedSound);
     }
   }
 
@@ -126,14 +155,15 @@ export default async function ChildDetailPage({
             Sound Mastery by Position
           </h2>
           <p className="mt-2 text-sm text-[#5f4a37]">
-            Track each sound in beginning, middle, and end positions. A score of
-            80+ can be marked as mastered.
+            Track each sound in beginning, middle, and end positions. Scores of
+            8+ are marked as mastered automatically.
           </p>
 
           <SoundGrid
             childId={childId}
             stageGroups={stageGroups}
             progressRecord={progressRecord}
+            exampleWordsBySoundId={exampleWordsBySoundId}
           />
         </div>
 
