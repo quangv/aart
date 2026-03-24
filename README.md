@@ -130,6 +130,9 @@ Useful commands:
 npm run db:start
 npm run db:stop
 
+# apply only new pending migrations to local Docker DB (non-destructive)
+npm run db:migrate:local
+
 # rebuild local db from migrations + seed.sql
 npm run db:reset
 

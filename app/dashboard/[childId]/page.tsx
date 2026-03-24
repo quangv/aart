@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
 import { upsertProgressAction } from "@/app/dashboard/actions";
 import { createClient } from "@/lib/supabase/server";
@@ -37,7 +38,11 @@ export default async function ChildDetailPage({
 
   const { data: sounds } = await supabase
     .from("sounds")
-    .select("id, code, label, ipa")
+    .select(
+      "id, code, label, ipa, stage_number, stage_name, stage_focus, stage_order",
+    )
+    .order("stage_number", { ascending: true })
+    .order("stage_order", { ascending: true })
     .order("code", { ascending: true });
 
   const { data: progressRows } = await supabase
@@ -88,90 +93,116 @@ export default async function ChildDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {(sounds ?? []).map((sound) => (
-                  <tr key={sound.id} className="align-top">
-                    <td className="rounded-l-xl bg-[#fff5eb] px-2 py-2">
-                      <p className="font-semibold text-[#2f2a26]">
-                        /{sound.code}/
-                      </p>
-                      <p className="text-xs text-[#7b6652]">
-                        {sound.ipa ?? sound.label}
-                      </p>
-                    </td>
+                {(sounds ?? []).map((sound, soundIndex, allSounds) => {
+                  const previousSound =
+                    soundIndex > 0 ? allSounds[soundIndex - 1] : null;
+                  const isFirstInStage =
+                    !previousSound ||
+                    previousSound.stage_number !== sound.stage_number;
 
-                    {positions.map((position, index) => {
-                      const key = `${sound.id}:${position}`;
-                      const existing = progressMap.get(key);
-                      const edgeClass =
-                        index === positions.length - 1 ? " rounded-r-xl" : "";
-
-                      return (
-                        <td
-                          key={position}
-                          className={`bg-[#fff5eb] px-2 py-2${edgeClass}`}
-                        >
-                          <form
-                            action={upsertProgressAction}
-                            className="space-y-2"
+                  return (
+                    <Fragment key={sound.id}>
+                      {isFirstInStage ? (
+                        <tr key={`stage-${sound.stage_number}`}>
+                          <td
+                            colSpan={4}
+                            className="pt-4 text-sm font-semibold text-[#2d78c4]"
                           >
-                            <input
-                              type="hidden"
-                              name="childId"
-                              value={childId}
-                            />
-                            <input
-                              type="hidden"
-                              name="soundId"
-                              value={sound.id}
-                            />
-                            <input
-                              type="hidden"
-                              name="position"
-                              value={position}
-                            />
-                            <input
-                              type="hidden"
-                              name="returnPath"
-                              value={`/dashboard/${childId}`}
-                            />
+                            Stage {sound.stage_number}: {sound.stage_name}
+                            <span className="ml-2 font-normal text-[#5f4a37]">
+                              {sound.stage_focus}
+                            </span>
+                          </td>
+                        </tr>
+                      ) : null}
 
-                            <label className="block text-xs text-[#7b6652]">
-                              Score
-                            </label>
-                            <input
-                              name="score"
-                              type="number"
-                              min={0}
-                              max={100}
-                              defaultValue={existing?.score ?? 0}
-                              className="w-full rounded-md border border-[#e8b795] px-2 py-1 outline-none ring-[#8ec7ed] transition focus:ring"
-                            />
-
-                            <label className="flex items-center gap-2 text-xs text-[#5f4a37]">
-                              <input
-                                name="mastered"
-                                type="checkbox"
-                                defaultChecked={existing?.mastered ?? false}
-                              />
-                              Mastered
-                            </label>
-
-                            <button
-                              type="submit"
-                              className="w-full rounded-md bg-[#2d78c4] px-2 py-1 text-xs font-semibold text-white hover:bg-[#2367aa]"
-                            >
-                              Save
-                            </button>
-
-                            <p className="text-[11px] text-[#7b6652]">
-                              Attempts: {existing?.attempts ?? 0}
-                            </p>
-                          </form>
+                      <tr className="align-top">
+                        <td className="rounded-l-xl bg-[#fff5eb] px-2 py-2">
+                          <p className="font-semibold text-[#2f2a26]">
+                            /{sound.code}/
+                          </p>
+                          <p className="text-xs text-[#7b6652]">
+                            {sound.ipa ?? sound.label}
+                          </p>
                         </td>
-                      );
-                    })}
-                  </tr>
-                ))}
+
+                        {positions.map((position, index) => {
+                          const key = `${sound.id}:${position}`;
+                          const existing = progressMap.get(key);
+                          const edgeClass =
+                            index === positions.length - 1
+                              ? " rounded-r-xl"
+                              : "";
+
+                          return (
+                            <td
+                              key={position}
+                              className={`bg-[#fff5eb] px-2 py-2${edgeClass}`}
+                            >
+                              <form
+                                action={upsertProgressAction}
+                                className="space-y-2"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="childId"
+                                  value={childId}
+                                />
+                                <input
+                                  type="hidden"
+                                  name="soundId"
+                                  value={sound.id}
+                                />
+                                <input
+                                  type="hidden"
+                                  name="position"
+                                  value={position}
+                                />
+                                <input
+                                  type="hidden"
+                                  name="returnPath"
+                                  value={`/dashboard/${childId}`}
+                                />
+
+                                <label className="block text-xs text-[#7b6652]">
+                                  Score
+                                </label>
+                                <input
+                                  name="score"
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  defaultValue={existing?.score ?? 0}
+                                  className="w-full rounded-md border border-[#e8b795] px-2 py-1 outline-none ring-[#8ec7ed] transition focus:ring"
+                                />
+
+                                <label className="flex items-center gap-2 text-xs text-[#5f4a37]">
+                                  <input
+                                    name="mastered"
+                                    type="checkbox"
+                                    defaultChecked={existing?.mastered ?? false}
+                                  />
+                                  Mastered
+                                </label>
+
+                                <button
+                                  type="submit"
+                                  className="w-full rounded-md bg-[#2d78c4] px-2 py-1 text-xs font-semibold text-white hover:bg-[#2367aa]"
+                                >
+                                  Save
+                                </button>
+
+                                <p className="text-[11px] text-[#7b6652]">
+                                  Attempts: {existing?.attempts ?? 0}
+                                </p>
+                              </form>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -74,6 +74,10 @@ export type Database = {
           code: string;
           ipa: string | null;
           label: string;
+          stage_number: number;
+          stage_name: string;
+          stage_focus: string;
+          stage_order: number;
           created_at: string;
         };
         Insert: {
@@ -81,6 +85,10 @@ export type Database = {
           code: string;
           ipa?: string | null;
           label: string;
+          stage_number?: number;
+          stage_name?: string;
+          stage_focus?: string;
+          stage_order?: number;
           created_at?: string;
         };
         Update: {
@@ -88,6 +96,10 @@ export type Database = {
           code?: string;
           ipa?: string | null;
           label?: string;
+          stage_number?: number;
+          stage_name?: string;
+          stage_focus?: string;
+          stage_order?: number;
           created_at?: string;
         };
         Relationships: [];

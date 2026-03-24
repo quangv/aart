@@ -50,8 +50,8 @@ export default async function Home() {
               <p className="mt-4 max-w-2xl text-base leading-7 text-[#5f4a37]">
                 Aart helps parents build articulation confidence by logging
                 mastery targets per sound position, then generating words,
-                phrases, and sentence prompts that stay inside what your child can
-                already say well.
+                phrases, and sentence prompts that stay inside what your child
+                can already say well.
               </p>
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-[#efc8ab] bg-[#fff7ee] p-3">

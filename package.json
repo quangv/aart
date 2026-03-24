@@ -13,6 +13,7 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:status": "supabase status",
+    "db:migrate:local": "supabase migration up",
     "db:reset": "supabase db reset",
     "db:push": "bash -lc 'set -a && source .env.local && set +a && supabase db push --db-url \"$SUPABASE_DB_URL\"'",
     "db:pull": "bash -lc 'set -a && source .env.local && set +a && supabase db pull --db-url \"$SUPABASE_DB_URL\"'",
