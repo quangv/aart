@@ -132,6 +132,16 @@ npm run db:stop
 
 # apply only new pending migrations to local Docker DB (non-destructive)
 npm run db:migrate:local
+# TODO: Figure out local vs production DB flow.
+# Currently .env.local points to production Supabase, so the app ignores local Docker migrations.
+# To test locally, temporarily swap NEXT_PUBLIC_SUPABASE_URL to http://127.0.0.1:54321,
+# or directly push to production with `npm run db:push`.
+
+# To use local Docker Supabase instead, update .env.local to:
+# NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+# SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+# Then: npm run db:migrate:local && npm run dev
 
 # rebuild local db from migrations + seed.sql
 npm run db:reset
