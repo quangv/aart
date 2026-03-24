@@ -20,7 +20,11 @@ const meta = {
       middle: { score: 5, attempts: 2, mastered: false },
       end: { score: 8.5, attempts: 4, mastered: true },
     },
-    exampleWords: ["mom", "mouse", "moon", "ham"],
+    exampleWordsByPosition: {
+      beginning: ["mom", "mouse", "moon"],
+      middle: ["lemon", "summer"],
+      end: ["ham", "jam"],
+    },
     progressAction: async () => {},
   },
   parameters: {
@@ -36,7 +40,11 @@ export const Default: Story = {};
 
 export const NoExamples: Story = {
   args: {
-    exampleWords: [],
+    exampleWordsByPosition: {
+      beginning: [],
+      middle: [],
+      end: [],
+    },
   },
 };
 
