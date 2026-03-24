@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 const positions = ["beginning", "middle", "end"] as const;
+type Position = (typeof positions)[number];
 
 type ProgressRow = {
   score: number | null;
   attempts: number | null;
   mastered: boolean | null;
+  notes?: string | null;
 };
 
 type Props = {
@@ -36,11 +38,19 @@ export default function SoundModal({
   exampleWordsByPosition,
   progressAction,
 }: Props) {
-  const [scores, setScores] = useState<Record<string, number>>({
+  const [scores, setScores] = useState<Record<Position, number>>({
     beginning: progress.beginning?.score ?? 1,
     middle: progress.middle?.score ?? 1,
     end: progress.end?.score ?? 1,
   });
+  const [notesByPosition, setNotesByPosition] = useState<
+    Record<Position, string>
+  >({
+    beginning: progress.beginning?.notes ?? "",
+    middle: progress.middle?.notes ?? "",
+    end: progress.end?.notes ?? "",
+  });
+  const [activePosition, setActivePosition] = useState<Position | null>(null);
 
   const formAction = progressAction;
 
@@ -85,94 +95,172 @@ export default function SoundModal({
               </button>
             </div>
 
-            {/* Per-position forms */}
-            <div className="mt-6 space-y-4">
-              {positions.map((position) => {
-                const row = progress[position];
-                const exampleWords = exampleWordsByPosition[position] ?? [];
-                return (
-                  <form key={position} action={formAction}>
-                    <input type="hidden" name="childId" value={childId} />
-                    <input type="hidden" name="soundId" value={sound.id} />
-                    <input type="hidden" name="position" value={position} />
-                    <input
-                      type="hidden"
-                      name="returnPath"
-                      value={`/dashboard/${childId}`}
-                    />
+            {activePosition === null ? (
+              <div className="mt-6">
+                <div className="rounded-2xl border border-[#f7dfce] bg-white px-4 py-3 text-xs text-[#5f4a37]">
+                  Read mode: review each position, then click Add to log score
+                  and notes.
+                </div>
 
-                    <div className="rounded-2xl border border-[#efc8ab] bg-white px-4 py-3">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#5f4a37]">
-                        {position}
-                      </p>
-                      <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-baseline gap-2">
-                            <span className="text-3xl font-bold tabular-nums text-[#2f2a26]">
-                              {scores[position]}
-                            </span>
-                            <span className="text-xs text-[#7b6652]">/ 10</span>
-                          </div>
-                          <input
-                            name="score"
-                            type="range"
-                            min={1}
-                            max={10}
-                            step={0.5}
-                            value={scores[position]}
-                            onChange={(e) =>
-                              setScores((prev) => ({
-                                ...prev,
-                                [position]: Number(e.target.value),
-                              }))
-                            }
-                            className="w-full accent-[#2d78c4]"
-                          />
-                          <div className="mt-0.5 flex justify-between text-[10px] text-[#7b6652]">
-                            <span>1</span>
-                            <span>5</span>
-                            <span>10</span>
-                          </div>
-                        </div>
-                        <button
-                          type="submit"
-                          className="mb-0.5 rounded-lg bg-[#2d78c4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2367aa]"
-                        >
-                          Save
-                        </button>
-                      </div>
-                      {row?.attempts != null && row.attempts > 0 ? (
-                        <p className="mt-1 text-[11px] text-[#7b6652]">
-                          {row.attempts} attempt{row.attempts !== 1 ? "s" : ""}
-                        </p>
-                      ) : null}
-
-                      <div className="mt-3 border-t border-[#f7dfce] pt-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7b6652]">
-                          Example words ({position})
-                        </p>
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          {exampleWords.length ? (
-                            exampleWords.map((word) => (
-                              <span
-                                key={word}
-                                className="rounded-full bg-[#fff5eb] px-2 py-0.5 text-[11px] text-[#5f4a37]"
-                              >
-                                {word}
-                              </span>
-                            ))
-                          ) : (
-                            <p className="text-[11px] text-[#7b6652]">
-                              No examples yet.
+                <div className="mt-4 space-y-4">
+                  {positions.map((position) => {
+                    const row = progress[position];
+                    const exampleWords = exampleWordsByPosition[position] ?? [];
+                    return (
+                      <div
+                        key={position}
+                        className="rounded-2xl border border-[#efc8ab] bg-white px-4 py-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[#5f4a37]">
+                              {position}
                             </p>
-                          )}
+                            {row?.score != null ? (
+                              <p className="mt-1 text-sm text-[#5f4a37]">
+                                Latest score: {row.score}/10
+                              </p>
+                            ) : (
+                              <p className="mt-1 text-sm text-[#7b6652]">
+                                No score yet.
+                              </p>
+                            )}
+                            {row?.attempts != null && row.attempts > 0 ? (
+                              <p className="text-[11px] text-[#7b6652]">
+                                {row.attempts} attempt
+                                {row.attempts !== 1 ? "s" : ""}
+                              </p>
+                            ) : null}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActivePosition(position)}
+                            className="rounded-lg bg-[#2d78c4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2367aa]"
+                          >
+                            Add
+                          </button>
                         </div>
+
+                        {row?.notes ? (
+                          <p className="mt-2 rounded-lg bg-[#fff7ee] px-2 py-1 text-[11px] text-[#5f4a37]">
+                            Note: {row.notes}
+                          </p>
+                        ) : null}
+
+                        <div className="mt-3 border-t border-[#f7dfce] pt-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7b6652]">
+                            Example words ({position})
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {exampleWords.length ? (
+                              exampleWords.map((word) => (
+                                <span
+                                  key={word}
+                                  className="rounded-full bg-[#fff5eb] px-2 py-0.5 text-[11px] text-[#5f4a37]"
+                                >
+                                  {word}
+                                </span>
+                              ))
+                            ) : (
+                              <p className="text-[11px] text-[#7b6652]">
+                                No examples yet.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <form action={formAction} className="mt-6">
+                <input type="hidden" name="childId" value={childId} />
+                <input type="hidden" name="soundId" value={sound.id} />
+                <input type="hidden" name="position" value={activePosition} />
+                <input
+                  type="hidden"
+                  name="returnPath"
+                  value={`/dashboard/${childId}`}
+                />
+
+                <div className="rounded-2xl border border-[#efc8ab] bg-white px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#5f4a37]">
+                    Add score - {activePosition}
+                  </p>
+
+                  <div className="mt-3 flex items-end gap-3">
+                    <div className="flex-1">
+                      <div className="mb-2 flex items-baseline gap-2">
+                        <span className="text-3xl font-bold tabular-nums text-[#2f2a26]">
+                          {scores[activePosition]}
+                        </span>
+                        <span className="text-xs text-[#7b6652]">/ 10</span>
+                      </div>
+                      <input
+                        name="score"
+                        type="range"
+                        min={1}
+                        max={10}
+                        step={0.5}
+                        value={scores[activePosition]}
+                        onChange={(e) =>
+                          setScores((prev) => ({
+                            ...prev,
+                            [activePosition]: Number(e.target.value),
+                          }))
+                        }
+                        className="w-full accent-[#2d78c4]"
+                      />
+                      <div className="mt-0.5 flex justify-between text-[10px] text-[#7b6652]">
+                        <span>1</span>
+                        <span>5</span>
+                        <span>10</span>
                       </div>
                     </div>
-                  </form>
-                );
-              })}
-            </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label
+                      htmlFor={`notes-${activePosition}`}
+                      className="text-xs font-semibold uppercase tracking-wider text-[#5f4a37]"
+                    >
+                      Note
+                    </label>
+                    <textarea
+                      id={`notes-${activePosition}`}
+                      name="notes"
+                      rows={3}
+                      value={notesByPosition[activePosition]}
+                      onChange={(e) =>
+                        setNotesByPosition((prev) => ({
+                          ...prev,
+                          [activePosition]: e.target.value,
+                        }))
+                      }
+                      placeholder="Optional note for this position"
+                      className="mt-1 w-full rounded-lg border border-[#efc8ab] bg-[#fffdf8] px-3 py-2 text-sm text-[#2f2a26] focus:border-[#2d78c4] focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setActivePosition(null)}
+                      className="rounded-lg border border-[#efc8ab] bg-[#fff7ee] px-3 py-1.5 text-xs font-semibold text-[#5f4a37] hover:bg-[#ffefdf]"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-[#2d78c4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2367aa]"
+                    >
+                      Save Progress
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
           </DialogPanel>
         </div>
       </div>

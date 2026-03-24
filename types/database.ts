@@ -164,6 +164,7 @@ export type Database = {
           score: number;
           attempts: number;
           mastered: boolean;
+          notes: string | null;
           last_practiced_at: string;
         };
         Insert: {
@@ -174,6 +175,7 @@ export type Database = {
           score?: number;
           attempts?: number;
           mastered?: boolean;
+          notes?: string | null;
           last_practiced_at?: string;
         };
         Update: {
@@ -184,6 +186,7 @@ export type Database = {
           score?: number;
           attempts?: number;
           mastered?: boolean;
+          notes?: string | null;
           last_practiced_at?: string;
         };
         Relationships: [];

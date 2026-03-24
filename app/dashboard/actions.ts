@@ -62,6 +62,7 @@ export async function upsertProgressAction(formData: FormData) {
     | "middle"
     | "end";
   const scoreInput = Number(formData.get("score") ?? "0");
+  const notes = String(formData.get("notes") ?? "").trim();
   const masteredInput = formData.get("mastered") === "on";
   const returnPath = String(
     formData.get("returnPath") ?? `/dashboard/${childId}`,
@@ -97,7 +98,8 @@ export async function upsertProgressAction(formData: FormData) {
       position,
       score,
       attempts,
-      mastered: masteredInput || score >= 80,
+      mastered: masteredInput || score >= 8,
+      notes: notes || null,
       last_practiced_at: new Date().toISOString(),
     },
     { onConflict: "child_id,sound_id,position" },

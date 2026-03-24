@@ -67,6 +67,7 @@ create table if not exists public.child_sound_progress (
   score int not null default 0 check (score between 0 and 100),
   attempts int not null default 0 check (attempts >= 0),
   mastered boolean not null default false,
+  notes text,
   last_practiced_at timestamptz not null default now(),
   unique (child_id, sound_id, position)
 );

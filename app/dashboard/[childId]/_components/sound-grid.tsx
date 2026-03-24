@@ -11,6 +11,7 @@ type ProgressRow = {
   score: number | null;
   attempts: number | null;
   mastered: boolean | null;
+  notes: string | null;
 };
 
 type SoundRow = {

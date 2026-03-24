@@ -33,23 +33,41 @@ export default async function ChildDetailPage({
 
   if (!child) {
     return (
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-6 py-16">
-        <div className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-8 text-center shadow-sm">
-          <p className="text-lg font-semibold text-[#2f2a26]">
-            Profile not found
-          </p>
-          <p className="mt-2 text-sm text-[#5f4a37]">
-            This child profile doesn&apos;t exist or you don&apos;t have access
-            to it.
-          </p>
-          <form action={clearLastChildAction} className="mt-6">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8">
+        <div className="flex justify-end">
+          <form action={clearLastChildAction}>
             <button
               type="submit"
-              className="rounded-lg bg-[#2d78c4] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2367aa]"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#e8b795] bg-[#fff7ee] px-3 py-2 text-sm font-semibold text-[#5f4a37] transition hover:bg-[#ffefdf]"
             >
-              Back to Profiles
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path d="M3 8h18" />
+                <path d="M3 16h18" />
+                <path d="M9 4v16" />
+              </svg>
+              Edit Profiles
             </button>
           </form>
+        </div>
+
+        <div className="mt-16 flex justify-center">
+          <div className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-8 text-center shadow-sm">
+            <p className="text-lg font-semibold text-[#2f2a26]">
+              Profile not found
+            </p>
+            <p className="mt-2 text-sm text-[#5f4a37]">
+              This child profile doesn&apos;t exist or you don&apos;t have
+              access to it.
+            </p>
+          </div>
         </div>
       </main>
     );
@@ -66,7 +84,9 @@ export default async function ChildDetailPage({
 
   const { data: progressRows } = await supabase
     .from("child_sound_progress")
-    .select("sound_id, position, score, attempts, mastered, last_practiced_at")
+    .select(
+      "sound_id, position, score, attempts, mastered, notes, last_practiced_at",
+    )
     .eq("child_id", childId);
 
   const { data: wordRows } = await supabase
@@ -81,13 +101,19 @@ export default async function ChildDetailPage({
 
   const progressRecord: Record<
     string,
-    { score: number | null; attempts: number | null; mastered: boolean | null }
+    {
+      score: number | null;
+      attempts: number | null;
+      mastered: boolean | null;
+      notes: string | null;
+    }
   > = {};
   for (const row of progressRows ?? []) {
     progressRecord[`${row.sound_id}:${row.position}`] = {
       score: row.score,
       attempts: row.attempts,
       mastered: row.mastered,
+      notes: row.notes,
     };
   }
 
@@ -163,20 +189,38 @@ export default async function ChildDetailPage({
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-8">
-      <div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
+            Child Tracker
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-[#2f2a26]">
+            {child.name}
+          </h1>
+          {child.notes ? (
+            <p className="mt-2 text-sm text-[#5f4a37]">{child.notes}</p>
+          ) : null}
+        </div>
+
         <Link
           href="/dashboard?manage=1"
-          className="inline-flex items-center gap-1 text-sm text-[#2d78c4] hover:underline"
+          className="inline-flex items-center gap-2 rounded-lg border border-[#e8b795] bg-[#fff7ee] px-3 py-2 text-sm font-semibold text-[#5f4a37] transition hover:bg-[#ffefdf]"
         >
-          ← Profiles
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path d="M3 8h18" />
+            <path d="M3 16h18" />
+            <path d="M9 4v16" />
+          </svg>
+          Edit Profiles
         </Link>
-        <p className="mt-3 text-sm uppercase tracking-[0.25em] text-[#2d78c4]">
-          Child Tracker
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-[#2f2a26]">{child.name}</h1>
-        {child.notes ? (
-          <p className="mt-2 text-sm text-[#5f4a37]">{child.notes}</p>
-        ) : null}
       </div>
 
       <section className="mt-8 grid gap-6 xl:grid-cols-3">
