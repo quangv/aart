@@ -155,6 +155,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      child_sound_progress_records: {
+        Row: {
+          id: number;
+          child_id: string;
+          sound_id: string;
+          position: Database["public"]["Enums"]["sound_position"];
+          score: number;
+          notes: string | null;
+          recorded_at: string;
+        };
+        Insert: {
+          id?: number;
+          child_id: string;
+          sound_id: string;
+          position: Database["public"]["Enums"]["sound_position"];
+          score: number;
+          notes?: string | null;
+          recorded_at?: string;
+        };
+        Update: {
+          id?: number;
+          child_id?: string;
+          sound_id?: string;
+          position?: Database["public"]["Enums"]["sound_position"];
+          score?: number;
+          notes?: string | null;
+          recorded_at?: string;
+        };
+        Relationships: [];
+      };
       child_sound_progress: {
         Row: {
           id: number;

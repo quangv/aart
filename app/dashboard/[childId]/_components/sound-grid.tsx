@@ -14,6 +14,12 @@ type ProgressRow = {
   notes: string | null;
 };
 
+type ScoreRecord = {
+  score: number;
+  notes: string | null;
+  recorded_at: string;
+};
+
 type SoundRow = {
   id: string;
   code: string;
@@ -36,6 +42,7 @@ type Props = {
   stageGroups: StageGroup[];
   progressRecord: Record<string, ProgressRow>;
   exampleWordsBySoundPosition: Record<string, string[]>;
+  scoreHistoryBySoundPosition: Record<string, ScoreRecord[]>;
 };
 
 export default function SoundGrid({
@@ -43,6 +50,7 @@ export default function SoundGrid({
   stageGroups,
   progressRecord,
   exampleWordsBySoundPosition,
+  scoreHistoryBySoundPosition,
 }: Props) {
   const [selectedSound, setSelectedSound] = useState<SoundRow | null>(null);
 
@@ -96,6 +104,14 @@ export default function SoundGrid({
             beginning: progressRecord[`${selectedSound.id}:beginning`],
             middle: progressRecord[`${selectedSound.id}:middle`],
             end: progressRecord[`${selectedSound.id}:end`],
+          }}
+          scoreHistoryByPosition={{
+            beginning:
+              scoreHistoryBySoundPosition[`${selectedSound.id}:beginning`] ??
+              [],
+            middle:
+              scoreHistoryBySoundPosition[`${selectedSound.id}:middle`] ?? [],
+            end: scoreHistoryBySoundPosition[`${selectedSound.id}:end`] ?? [],
           }}
         />
       ) : null}

@@ -109,6 +109,15 @@ export async function upsertProgressAction(formData: FormData) {
     redirect(`${returnPath}?message=${encodeURIComponent(error.message)}`);
   }
 
+  // Insert a history record (best-effort — don't block on failure)
+  await supabase.from("child_sound_progress_records").insert({
+    child_id: childId,
+    sound_id: soundId,
+    position,
+    score,
+    notes: notes || null,
+  });
+
   revalidatePath(returnPath);
   redirect(returnPath);
 }

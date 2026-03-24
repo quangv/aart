@@ -89,6 +89,12 @@ export default async function ChildDetailPage({
     )
     .eq("child_id", childId);
 
+  const { data: recordRows } = await supabase
+    .from("child_sound_progress_records")
+    .select("sound_id, position, score, notes, recorded_at")
+    .eq("child_id", childId)
+    .order("recorded_at", { ascending: false });
+
   const { data: wordRows } = await supabase
     .from("words")
     .select("id, text, reading_level")
@@ -115,6 +121,22 @@ export default async function ChildDetailPage({
       mastered: row.mastered,
       notes: row.notes,
     };
+  }
+
+  const scoreHistoryBySoundPosition: Record<
+    string,
+    { score: number; notes: string | null; recorded_at: string }[]
+  > = {};
+  for (const row of recordRows ?? []) {
+    const key = `${row.sound_id}:${row.position}`;
+    if (!scoreHistoryBySoundPosition[key]) {
+      scoreHistoryBySoundPosition[key] = [];
+    }
+    scoreHistoryBySoundPosition[key].push({
+      score: row.score,
+      notes: row.notes,
+      recorded_at: row.recorded_at,
+    });
   }
 
   const wordById = new Map<string, { text: string; reading_level: number }>();
@@ -238,6 +260,7 @@ export default async function ChildDetailPage({
             stageGroups={stageGroups}
             progressRecord={progressRecord}
             exampleWordsBySoundPosition={exampleWordsBySoundPosition}
+            scoreHistoryBySoundPosition={scoreHistoryBySoundPosition}
           />
         </div>
 

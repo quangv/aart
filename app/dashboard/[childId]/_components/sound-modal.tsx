@@ -13,6 +13,12 @@ type ProgressRow = {
   notes?: string | null;
 };
 
+type ScoreRecord = {
+  score: number;
+  notes: string | null;
+  recorded_at: string;
+};
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +32,7 @@ type Props = {
   };
   progress: Partial<Record<(typeof positions)[number], ProgressRow>>;
   exampleWordsByPosition: Partial<Record<(typeof positions)[number], string[]>>;
+  scoreHistoryByPosition?: Partial<Record<Position, ScoreRecord[]>>;
   progressAction?: (formData: FormData) => void | Promise<void>;
 };
 
@@ -36,6 +43,7 @@ export default function SoundModal({
   sound,
   progress,
   exampleWordsByPosition,
+  scoreHistoryByPosition,
   progressAction,
 }: Props) {
   const [scores, setScores] = useState<Record<Position, number>>({
@@ -117,9 +125,14 @@ export default function SoundModal({
                               {position}
                             </p>
                             {row?.score != null ? (
-                              <p className="mt-1 text-sm text-[#5f4a37]">
-                                Latest score: {row.score}/10
-                              </p>
+                              <div className="mt-1 flex items-baseline gap-1">
+                                <span className="text-2xl font-bold tabular-nums text-[#2f2a26]">
+                                  {row.score}
+                                </span>
+                                <span className="text-xs text-[#7b6652]">
+                                  / 10
+                                </span>
+                              </div>
                             ) : (
                               <p className="mt-1 text-sm text-[#7b6652]">
                                 No score yet.
@@ -127,7 +140,7 @@ export default function SoundModal({
                             )}
                             {row?.attempts != null && row.attempts > 0 ? (
                               <p className="text-[11px] text-[#7b6652]">
-                                {row.attempts} attempt
+                                {row.attempts} record
                                 {row.attempts !== 1 ? "s" : ""}
                               </p>
                             ) : null}
@@ -273,6 +286,45 @@ export default function SoundModal({
                       Save Progress
                     </button>
                   </div>
+
+                  {/* Score history */}
+                  {(scoreHistoryByPosition?.[activePosition]?.length ?? 0) >
+                  0 ? (
+                    <div className="mt-4 border-t border-[#f7dfce] pt-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7b6652]">
+                        Records
+                      </p>
+                      <div className="mt-2 space-y-2">
+                        {scoreHistoryByPosition![activePosition]!.map(
+                          (record, i) => (
+                            <div
+                              key={i}
+                              className="flex items-start justify-between gap-2"
+                            >
+                              <div>
+                                <span className="text-sm font-semibold tabular-nums text-[#2f2a26]">
+                                  {record.score}
+                                  <span className="ml-0.5 text-[10px] font-normal text-[#7b6652]">
+                                    /10
+                                  </span>
+                                </span>
+                                {record.notes ? (
+                                  <p className="text-[11px] text-[#7b6652]">
+                                    {record.notes}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <span className="whitespace-nowrap text-[10px] text-[#7b6652]">
+                                {new Date(
+                                  record.recorded_at,
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </form>
             )}

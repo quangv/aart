@@ -59,6 +59,16 @@ create table if not exists public.word_sounds (
   unique (word_id, sound_id, position, sequence_index)
 );
 
+create table if not exists public.child_sound_progress_records (
+  id bigserial primary key,
+  child_id uuid not null references public.children(id) on delete cascade,
+  sound_id uuid not null references public.sounds(id) on delete cascade,
+  position public.sound_position not null,
+  score numeric(4,1) not null check (score between 1 and 10),
+  notes text,
+  recorded_at timestamptz not null default now()
+);
+
 create table if not exists public.child_sound_progress (
   id bigserial primary key,
   child_id uuid not null references public.children(id) on delete cascade,
