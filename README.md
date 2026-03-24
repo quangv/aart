@@ -45,20 +45,29 @@ npm install
 
 ```bash
 cp .env.example .env.local
+cp .env.example .env.prod
 ```
 
-Set:
+Set in .env.local (used by Next.js app runtime):
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_DB_URL` (since no ip4 address use `session pooler` url)
 - `NEXT_PUBLIC_SITE_URL` (optional but recommended; used for password reset email redirects)
+
+Set in .env.prod (used by CLI db scripts `npm run db:push` and `npm run db:pull`):
+
+- `SUPABASE_DB_URL` (use the `session pooler` URL when direct IPv4 DB host is not available)
 
 Example `.env.local` values:
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://gayindulqnrngbpuqixl.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.EXAMPLE_PAYLOAD.EXAMPLE_SIGNATURE
+```
+
+Example `.env.prod` value:
+
+```dotenv
 SUPABASE_DB_URL=postgresql://postgres.gayindulqnrngbpuqixl:YOUR_DB_PASSWORD@aws-1-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
 ```
 
@@ -152,7 +161,7 @@ npm run db:reset
 # use when you manually edited tables in Supabase dashboard
 npm run db:pull
 
-# db:push and db:pull read SUPABASE_DB_URL from .env.local
+# db:push and db:pull read SUPABASE_DB_URL from .env.prod
 # useful on WSL/network setups where direct db.<project-ref> host fails
 npm run db:push
 npm run db:pull
