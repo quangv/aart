@@ -107,6 +107,8 @@ Open `http://localhost:3000`.
 
 ## Database Migrations (Supabase CLI)
 
+**⚠️ CRITICAL: Never edit a migration file after it's been deployed to production.** Always create a new migration file to fix issues or iterate on changes. Once a migration runs (or is recorded as attempted), it's locked in the `schema_migrations` table. Editing it breaks the contract between your local code and production history.
+
 This repo now includes a baseline migration at [supabase/migrations/20260322000100_init.sql](supabase/migrations/20260322000100_init.sql).
 
 If you see child insert foreign key errors for older accounts, apply latest migrations (including [supabase/migrations/20260322000300_profiles_self_insert_policy.sql](supabase/migrations/20260322000300_profiles_self_insert_policy.sql)).
