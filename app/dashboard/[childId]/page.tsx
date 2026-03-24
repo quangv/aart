@@ -1,6 +1,4 @@
-import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
-import { upsertProgressAction } from "@/app/dashboard/actions";
 import { createClient } from "@/lib/supabase/server";
 import { getRecommendationsForChild } from "@/lib/recommendations";
 
@@ -60,6 +58,27 @@ export default async function ChildDetailPage({
 
   const recommendations = await getRecommendationsForChild(supabase, childId);
 
+  type SoundRow = NonNullable<typeof sounds>[number];
+  const stageGroups: {
+    stageNumber: number;
+    stageName: string;
+    stageFocus: string;
+    sounds: SoundRow[];
+  }[] = [];
+  for (const sound of sounds ?? []) {
+    const last = stageGroups[stageGroups.length - 1];
+    if (!last || last.stageNumber !== sound.stage_number) {
+      stageGroups.push({
+        stageNumber: sound.stage_number,
+        stageName: sound.stage_name,
+        stageFocus: sound.stage_focus,
+        sounds: [sound],
+      });
+    } else {
+      last.sounds.push(sound);
+    }
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-8">
       <div>
@@ -82,129 +101,43 @@ export default async function ChildDetailPage({
             80+ can be marked as mastered.
           </p>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-y-2 text-sm">
-              <thead>
-                <tr className="text-left text-[#5f4a37]">
-                  <th className="px-2 py-1">Sound</th>
-                  <th className="px-2 py-1">Beginning</th>
-                  <th className="px-2 py-1">Middle</th>
-                  <th className="px-2 py-1">End</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(sounds ?? []).map((sound, soundIndex, allSounds) => {
-                  const previousSound =
-                    soundIndex > 0 ? allSounds[soundIndex - 1] : null;
-                  const isFirstInStage =
-                    !previousSound ||
-                    previousSound.stage_number !== sound.stage_number;
-
-                  return (
-                    <Fragment key={sound.id}>
-                      {isFirstInStage ? (
-                        <tr key={`stage-${sound.stage_number}`}>
-                          <td
-                            colSpan={4}
-                            className="pt-4 text-sm font-semibold text-[#2d78c4]"
-                          >
-                            Stage {sound.stage_number}: {sound.stage_name}
-                            <span className="ml-2 font-normal text-[#5f4a37]">
-                              {sound.stage_focus}
-                            </span>
-                          </td>
-                        </tr>
-                      ) : null}
-
-                      <tr className="align-top">
-                        <td className="rounded-l-xl bg-[#fff5eb] px-2 py-2">
-                          <p className="font-semibold text-[#2f2a26]">
-                            /{sound.code}/
-                          </p>
-                          <p className="text-xs text-[#7b6652]">
-                            {sound.ipa ?? sound.label}
-                          </p>
-                        </td>
-
-                        {positions.map((position, index) => {
-                          const key = `${sound.id}:${position}`;
-                          const existing = progressMap.get(key);
-                          const edgeClass =
-                            index === positions.length - 1
-                              ? " rounded-r-xl"
-                              : "";
-
-                          return (
-                            <td
-                              key={position}
-                              className={`bg-[#fff5eb] px-2 py-2${edgeClass}`}
-                            >
-                              <form
-                                action={upsertProgressAction}
-                                className="space-y-2"
-                              >
-                                <input
-                                  type="hidden"
-                                  name="childId"
-                                  value={childId}
-                                />
-                                <input
-                                  type="hidden"
-                                  name="soundId"
-                                  value={sound.id}
-                                />
-                                <input
-                                  type="hidden"
-                                  name="position"
-                                  value={position}
-                                />
-                                <input
-                                  type="hidden"
-                                  name="returnPath"
-                                  value={`/dashboard/${childId}`}
-                                />
-
-                                <label className="block text-xs text-[#7b6652]">
-                                  Score
-                                </label>
-                                <input
-                                  name="score"
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  defaultValue={existing?.score ?? 0}
-                                  className="w-full rounded-md border border-[#e8b795] px-2 py-1 outline-none ring-[#8ec7ed] transition focus:ring"
-                                />
-
-                                <label className="flex items-center gap-2 text-xs text-[#5f4a37]">
-                                  <input
-                                    name="mastered"
-                                    type="checkbox"
-                                    defaultChecked={existing?.mastered ?? false}
-                                  />
-                                  Mastered
-                                </label>
-
-                                <button
-                                  type="submit"
-                                  className="w-full rounded-md bg-[#2d78c4] px-2 py-1 text-xs font-semibold text-white hover:bg-[#2367aa]"
-                                >
-                                  Save
-                                </button>
-
-                                <p className="text-[11px] text-[#7b6652]">
-                                  Attempts: {existing?.attempts ?? 0}
-                                </p>
-                              </form>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="mt-6 space-y-8">
+            {stageGroups.map(
+              ({ stageNumber, stageName, stageFocus, sounds: stageSounds }) => (
+                <div key={stageNumber}>
+                  <p className="mb-3 text-sm font-semibold text-[#2d78c4]">
+                    Stage {stageNumber}: {stageName}
+                    <span className="ml-2 font-normal text-[#5f4a37]">
+                      {stageFocus}
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {stageSounds.map((sound) => {
+                      const isMastered = positions.some(
+                        (pos) =>
+                          progressMap.get(`${sound.id}:${pos}`)?.mastered,
+                      );
+                      return (
+                        <button
+                          key={sound.id}
+                          type="button"
+                          className={`flex h-20 w-20 flex-col items-center justify-center rounded-2xl border-2 font-semibold transition hover:scale-105 ${
+                            isMastered
+                              ? "border-[#b8d696] bg-[#f0f9e5] text-[#5a7f44]"
+                              : "border-[#efc8ab] bg-[#fff5eb] text-[#2f2a26] hover:border-[#2d78c4]"
+                          }`}
+                        >
+                          <span className="text-xl">{sound.ipa}</span>
+                          <span className="mt-1 px-1 text-center text-[10px] leading-tight text-[#7b6652]">
+                            {sound.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ),
+            )}
           </div>
         </div>
 
