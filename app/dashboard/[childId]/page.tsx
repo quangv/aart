@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRecommendationsForChild } from "@/lib/recommendations";
-
-const positions = ["beginning", "middle", "end"] as const;
+import SoundGrid from "./_components/sound-grid";
 
 export default async function ChildDetailPage({
   params,
@@ -48,17 +47,29 @@ export default async function ChildDetailPage({
     .select("sound_id, position, score, attempts, mastered, last_practiced_at")
     .eq("child_id", childId);
 
-  const progressMap = new Map<
+  const progressRecord: Record<
     string,
-    NonNullable<typeof progressRows>[number]
-  >();
+    { score: number | null; attempts: number | null; mastered: boolean | null }
+  > = {};
   for (const row of progressRows ?? []) {
-    progressMap.set(`${row.sound_id}:${row.position}`, row);
+    progressRecord[`${row.sound_id}:${row.position}`] = {
+      score: row.score,
+      attempts: row.attempts,
+      mastered: row.mastered,
+    };
   }
 
   const recommendations = await getRecommendationsForChild(supabase, childId);
 
-  type SoundRow = NonNullable<typeof sounds>[number];
+  type SoundRow = {
+    id: string;
+    code: string;
+    label: string;
+    ipa: string;
+    stage_number: number;
+    stage_name: string;
+    stage_focus: string;
+  };
   const stageGroups: {
     stageNumber: number;
     stageName: string;
@@ -72,10 +83,28 @@ export default async function ChildDetailPage({
         stageNumber: sound.stage_number,
         stageName: sound.stage_name,
         stageFocus: sound.stage_focus,
-        sounds: [sound],
+        sounds: [
+          {
+            id: sound.id,
+            code: sound.code,
+            label: sound.label,
+            ipa: sound.ipa,
+            stage_number: sound.stage_number,
+            stage_name: sound.stage_name,
+            stage_focus: sound.stage_focus,
+          },
+        ],
       });
     } else {
-      last.sounds.push(sound);
+      last.sounds.push({
+        id: sound.id,
+        code: sound.code,
+        label: sound.label,
+        ipa: sound.ipa,
+        stage_number: sound.stage_number,
+        stage_name: sound.stage_name,
+        stage_focus: sound.stage_focus,
+      });
     }
   }
 
@@ -101,44 +130,11 @@ export default async function ChildDetailPage({
             80+ can be marked as mastered.
           </p>
 
-          <div className="mt-6 space-y-8">
-            {stageGroups.map(
-              ({ stageNumber, stageName, stageFocus, sounds: stageSounds }) => (
-                <div key={stageNumber}>
-                  <p className="mb-3 text-sm font-semibold text-[#2d78c4]">
-                    Stage {stageNumber}: {stageName}
-                    <span className="ml-2 font-normal text-[#5f4a37]">
-                      {stageFocus}
-                    </span>
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {stageSounds.map((sound) => {
-                      const isMastered = positions.some(
-                        (pos) =>
-                          progressMap.get(`${sound.id}:${pos}`)?.mastered,
-                      );
-                      return (
-                        <button
-                          key={sound.id}
-                          type="button"
-                          className={`flex h-20 w-20 flex-col items-center justify-center rounded-2xl border-2 font-semibold transition hover:scale-105 ${
-                            isMastered
-                              ? "border-[#b8d696] bg-[#f0f9e5] text-[#5a7f44]"
-                              : "border-[#efc8ab] bg-[#fff5eb] text-[#2f2a26] hover:border-[#2d78c4]"
-                          }`}
-                        >
-                          <span className="text-xl">{sound.ipa}</span>
-                          <span className="mt-1 px-1 text-center text-[10px] leading-tight text-[#7b6652]">
-                            {sound.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
+          <SoundGrid
+            childId={childId}
+            stageGroups={stageGroups}
+            progressRecord={progressRecord}
+          />
         </div>
 
         <div className="space-y-6 xl:col-span-1">
