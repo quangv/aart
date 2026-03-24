@@ -185,6 +185,28 @@ export default function SoundModal({
                 />
 
                 <div className="rounded-2xl border border-[#efc8ab] bg-white px-4 py-3">
+                  <div className="mb-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActivePosition(null)}
+                      className="flex items-center gap-1 text-xs text-[#2d78c4] hover:underline"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3 w-3"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Back
+                    </button>
+                  </div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#5f4a37]">
                     Add score - {activePosition}
                   </p>
@@ -243,14 +265,7 @@ export default function SoundModal({
                     />
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setActivePosition(null)}
-                      className="rounded-lg border border-[#efc8ab] bg-[#fff7ee] px-3 py-1.5 text-xs font-semibold text-[#5f4a37] hover:bg-[#ffefdf]"
-                    >
-                      Back
-                    </button>
+                  <div className="mt-4 flex justify-end">
                     <button
                       type="submit"
                       className="rounded-lg bg-[#2d78c4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2367aa]"
