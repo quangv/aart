@@ -75,8 +75,8 @@ export async function upsertProgressAction(formData: FormData) {
   }
 
   const score = Number.isNaN(scoreInput)
-    ? 0
-    : Math.max(0, Math.min(100, Math.round(scoreInput)));
+    ? 1
+    : Math.max(1, Math.min(10, Math.round(scoreInput * 2) / 2));
 
   const supabase = await createClient();
   const { data: existing } = await supabase

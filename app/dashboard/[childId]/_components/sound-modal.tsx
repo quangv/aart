@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { upsertProgressAction } from "@/app/dashboard/actions";
 
@@ -32,6 +33,12 @@ export default function SoundModal({
   sound,
   progress,
 }: Props) {
+  const [scores, setScores] = useState<Record<string, number>>({
+    beginning: progress.beginning?.score ?? 1,
+    middle: progress.middle?.score ?? 1,
+    end: progress.end?.score ?? 1,
+  });
+
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       {/* Backdrop */}
@@ -93,17 +100,32 @@ export default function SoundModal({
                     </p>
                     <div className="flex items-end gap-3">
                       <div className="flex-1">
-                        <label className="mb-1 block text-xs text-[#7b6652]">
-                          Score (0–100)
-                        </label>
+                        <div className="mb-2 flex items-baseline gap-2">
+                          <span className="text-3xl font-bold tabular-nums text-[#2f2a26]">
+                            {scores[position]}
+                          </span>
+                          <span className="text-xs text-[#7b6652]">/ 10</span>
+                        </div>
                         <input
                           name="score"
-                          type="number"
-                          min={0}
-                          max={100}
-                          defaultValue={row?.score ?? 0}
-                          className="w-full rounded-lg border border-[#e8b795] px-3 py-1.5 text-sm outline-none ring-[#8ec7ed] transition focus:ring"
+                          type="range"
+                          min={1}
+                          max={10}
+                          step={0.5}
+                          value={scores[position]}
+                          onChange={(e) =>
+                            setScores((prev) => ({
+                              ...prev,
+                              [position]: Number(e.target.value),
+                            }))
+                          }
+                          className="w-full accent-[#2d78c4]"
                         />
+                        <div className="mt-0.5 flex justify-between text-[10px] text-[#7b6652]">
+                          <span>1</span>
+                          <span>5</span>
+                          <span>10</span>
+                        </div>
                       </div>
                       <label className="mb-1.5 flex items-center gap-1.5 text-xs text-[#5f4a37]">
                         <input
