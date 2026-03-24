@@ -3,6 +3,134 @@
 import { useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
+function ScoreChart({
+  records,
+}: {
+  records: { score: number; recorded_at: string }[];
+}) {
+  // oldest → newest
+  const sorted = [...records].reverse();
+  if (sorted.length === 0) return null;
+
+  const W = 280;
+  const H = 72;
+  const pad = { top: 6, right: 8, bottom: 18, left: 22 };
+  const pw = W - pad.left - pad.right;
+  const ph = H - pad.top - pad.bottom;
+
+  const xOf = (i: number) =>
+    sorted.length === 1
+      ? pad.left + pw / 2
+      : pad.left + (i / (sorted.length - 1)) * pw;
+  const yOf = (s: number) => pad.top + ph - ((s - 1) / 9) * ph;
+
+  const points = sorted.map((r, i) => `${xOf(i)},${yOf(r.score)}`).join(" ");
+  const latest = sorted[sorted.length - 1];
+  const lx = xOf(sorted.length - 1);
+  const ly = yOf(latest.score);
+
+  const gridScores = [1, 5, 10];
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" aria-hidden="true">
+      {/* grid lines */}
+      {gridScores.map((s) => {
+        const y = yOf(s);
+        return (
+          <g key={s}>
+            <line
+              x1={pad.left}
+              y1={y}
+              x2={W - pad.right}
+              y2={y}
+              stroke="#f0e0d0"
+              strokeWidth="1"
+            />
+            <text
+              x={pad.left - 3}
+              y={y + 3.5}
+              textAnchor="end"
+              fontSize="7"
+              fill="#a08070"
+            >
+              {s}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* line */}
+      {sorted.length > 1 && (
+        <polyline
+          points={points}
+          fill="none"
+          stroke="#93c5e0"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      )}
+
+      {/* dots */}
+      {sorted.map((r, i) => {
+        const isLatest = i === sorted.length - 1;
+        return (
+          <circle
+            key={i}
+            cx={xOf(i)}
+            cy={yOf(r.score)}
+            r={isLatest ? 4 : 2.5}
+            fill={isLatest ? "#2d78c4" : "#efc8ab"}
+            stroke={isLatest ? "#2367aa" : "#c89060"}
+            strokeWidth="1"
+          />
+        );
+      })}
+
+      {/* latest score label */}
+      <text
+        x={lx}
+        y={ly - 7}
+        textAnchor={lx > W - 30 ? "end" : lx < 30 ? "start" : "middle"}
+        fontSize="8"
+        fontWeight="bold"
+        fill="#2d78c4"
+      >
+        {latest.score}
+      </text>
+
+      {/* x-axis date labels: first and last */}
+      {sorted.length > 1 && (
+        <>
+          <text
+            x={pad.left}
+            y={H - 2}
+            textAnchor="start"
+            fontSize="7"
+            fill="#a08070"
+          >
+            {new Date(sorted[0].recorded_at).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+            })}
+          </text>
+          <text
+            x={W - pad.right}
+            y={H - 2}
+            textAnchor="end"
+            fontSize="7"
+            fill="#a08070"
+          >
+            {new Date(latest.recorded_at).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+            })}
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}
+
 const positions = ["beginning", "middle", "end"] as const;
 type Position = (typeof positions)[number];
 
@@ -51,14 +179,13 @@ export default function SoundModal({
     middle: progress.middle?.score ?? 1,
     end: progress.end?.score ?? 1,
   });
-  const [notesByPosition, setNotesByPosition] = useState<
-    Record<Position, string>
-  >({
-    beginning: progress.beginning?.notes ?? "",
-    middle: progress.middle?.notes ?? "",
-    end: progress.end?.notes ?? "",
-  });
+  const [addNote, setAddNote] = useState("");
   const [activePosition, setActivePosition] = useState<Position | null>(null);
+
+  function openAdd(position: Position) {
+    setAddNote("");
+    setActivePosition(position);
+  }
 
   const formAction = progressAction;
 
@@ -147,7 +274,7 @@ export default function SoundModal({
                           </div>
                           <button
                             type="button"
-                            onClick={() => setActivePosition(position)}
+                            onClick={() => openAdd(position)}
                             className="rounded-lg bg-[#2d78c4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2367aa]"
                           >
                             Add
@@ -224,6 +351,16 @@ export default function SoundModal({
                     Add score - {activePosition}
                   </p>
 
+                  {/* Score-over-time chart */}
+                  {(scoreHistoryByPosition?.[activePosition]?.length ?? 0) >
+                  0 ? (
+                    <div className="mt-3 rounded-xl bg-[#fffdf8] px-1 py-2">
+                      <ScoreChart
+                        records={scoreHistoryByPosition![activePosition]!}
+                      />
+                    </div>
+                  ) : null}
+
                   <div className="mt-3 flex items-end gap-3">
                     <div className="flex-1">
                       <div className="mb-2 flex items-baseline gap-2">
@@ -266,14 +403,9 @@ export default function SoundModal({
                       id={`notes-${activePosition}`}
                       name="notes"
                       rows={3}
-                      value={notesByPosition[activePosition]}
-                      onChange={(e) =>
-                        setNotesByPosition((prev) => ({
-                          ...prev,
-                          [activePosition]: e.target.value,
-                        }))
-                      }
-                      placeholder="Optional note for this position"
+                      value={addNote}
+                      onChange={(e) => setAddNote(e.target.value)}
+                      placeholder="Optional note for this record"
                       className="mt-1 w-full rounded-lg border border-[#efc8ab] bg-[#fffdf8] px-3 py-2 text-sm text-[#2f2a26] focus:border-[#2d78c4] focus:outline-none"
                     />
                   </div>
@@ -288,13 +420,13 @@ export default function SoundModal({
                   </div>
 
                   {/* Score history */}
-                  {(scoreHistoryByPosition?.[activePosition]?.length ?? 0) >
-                  0 ? (
-                    <div className="mt-4 border-t border-[#f7dfce] pt-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7b6652]">
-                        Records
-                      </p>
-                      <div className="mt-2 space-y-2">
+                  <div className="mt-4 border-t border-[#f7dfce] pt-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7b6652]">
+                      Records
+                    </p>
+                    {(scoreHistoryByPosition?.[activePosition]?.length ?? 0) >
+                    0 ? (
+                      <div className="mt-2 space-y-1">
                         {scoreHistoryByPosition![activePosition]!.map(
                           (record, i) => (
                             <div
@@ -302,7 +434,7 @@ export default function SoundModal({
                               className="flex items-start justify-between gap-2"
                             >
                               <div>
-                                <span className="text-sm font-semibold tabular-nums text-[#2f2a26]">
+                                <span className="text-xs font-semibold tabular-nums text-[#2f2a26]">
                                   {record.score}
                                   <span className="ml-0.5 text-[10px] font-normal text-[#7b6652]">
                                     /10
@@ -323,8 +455,12 @@ export default function SoundModal({
                           ),
                         )}
                       </div>
-                    </div>
-                  ) : null}
+                    ) : (
+                      <p className="mt-2 text-[11px] text-[#7b6652]">
+                        No records yet. Save your first score above.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </form>
             )}

@@ -74,7 +74,7 @@ create table if not exists public.child_sound_progress (
   child_id uuid not null references public.children(id) on delete cascade,
   sound_id uuid not null references public.sounds(id) on delete cascade,
   position public.sound_position not null,
-  score int not null default 0 check (score between 0 and 100),
+  score numeric(4,1) not null default 1 check (score between 1 and 10),
   attempts int not null default 0 check (attempts >= 0),
   mastered boolean not null default false,
   notes text,
