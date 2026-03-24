@@ -98,6 +98,26 @@ psql "$SUPABASE_DB_URL" -c "SELECT * FROM information_schema.tables WHERE table_
 npm run db:migration:new -- fix_<issue_name>
 ```
 
+### Example words missing in production
+
+If the dashboard shows `No examples yet.` for most sounds, check whether `public.word_sounds` has rows.
+
+```bash
+psql "$SUPABASE_DB_URL" -c "select count(*) from public.word_sounds;"
+```
+
+If the count is `0` or unexpectedly low, do not patch data manually with ad-hoc SQL. Use the committed backfill migration:
+
+- [supabase/migrations/20260324000200_backfill_phoneme_position_examples.sql](migrations/20260324000200_backfill_phoneme_position_examples.sql)
+
+Apply it through migration history:
+
+```bash
+npm run db:push
+```
+
+This keeps local and production aligned and preserves the migration audit trail.
+
 ## File Structure
 
 - **migrations/** — Timestamped SQL migration files (never edit after deployment)
