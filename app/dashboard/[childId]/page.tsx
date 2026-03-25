@@ -91,7 +91,7 @@ export default async function ChildDetailPage({
 
   const { data: recordRows } = await supabase
     .from("child_sound_progress_records")
-    .select("sound_id, position, score, notes, recorded_at")
+    .select("id, sound_id, position, score, notes, recorded_at")
     .eq("child_id", childId)
     .order("recorded_at", { ascending: false });
 
@@ -125,7 +125,7 @@ export default async function ChildDetailPage({
 
   const scoreHistoryBySoundPosition: Record<
     string,
-    { score: number; notes: string | null; recorded_at: string }[]
+    { id: number; score: number; notes: string | null; recorded_at: string }[]
   > = {};
   for (const row of recordRows ?? []) {
     const key = `${row.sound_id}:${row.position}`;
@@ -133,6 +133,7 @@ export default async function ChildDetailPage({
       scoreHistoryBySoundPosition[key] = [];
     }
     scoreHistoryBySoundPosition[key].push({
+      id: row.id,
       score: row.score,
       notes: row.notes,
       recorded_at: row.recorded_at,

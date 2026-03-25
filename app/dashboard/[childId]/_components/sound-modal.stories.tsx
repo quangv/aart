@@ -25,7 +25,12 @@ const meta = {
       middle: ["lemon", "summer"],
       end: ["ham", "jam"],
     },
-    progressAction: async () => {},
+    progressAction: async () => ({
+      id: 1,
+      score: 5,
+      notes: null,
+      recorded_at: new Date().toISOString(),
+    }),
   },
   parameters: {
     layout: "fullscreen",

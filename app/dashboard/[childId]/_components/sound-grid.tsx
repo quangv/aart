@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { upsertProgressAction } from "@/app/dashboard/actions";
+import {
+  upsertProgressAction,
+  updateProgressRecordAction,
+  deleteProgressRecordAction,
+} from "@/app/dashboard/actions";
 import PhonemeButton from "./phoneme-button";
 import SoundModal from "./sound-modal";
 
@@ -15,6 +19,7 @@ type ProgressRow = {
 };
 
 type ScoreRecord = {
+  id: number;
   score: number;
   notes: string | null;
   recorded_at: string;
@@ -100,6 +105,8 @@ export default function SoundGrid({
             end: exampleWordsBySoundPosition[`${selectedSound.id}:end`] ?? [],
           }}
           progressAction={upsertProgressAction}
+          updateRecordAction={updateProgressRecordAction}
+          deleteRecordAction={deleteProgressRecordAction}
           progress={{
             beginning: progressRecord[`${selectedSound.id}:beginning`],
             middle: progressRecord[`${selectedSound.id}:middle`],
