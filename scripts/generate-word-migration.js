@@ -15,6 +15,12 @@
 const fs = require("fs");
 const path = require("path");
 const dict = require("cmu-pronouncing-dictionary").dictionary;
+const OXFORD_3000_CSV_PATH = path.join(
+  process.cwd(),
+  "scripts",
+  "data",
+  "oxford3000.csv",
+);
 
 // ---------------------------------------------------------------------------
 // ARPABET → app IPA code (the 39 phonemes in public.sounds)
@@ -97,6 +103,143 @@ function getWordData(word) {
     syllables: countSyllables(phonemes),
     mappings: Array.from(seen.values()),
   };
+}
+
+function parseCsvLine(line) {
+  const out = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+
+    if (ch === '"') {
+      const next = line[i + 1];
+      if (inQuotes && next === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (ch === "," && !inQuotes) {
+      out.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += ch;
+  }
+
+  out.push(current.trim());
+  return out;
+}
+
+function normalizePartOfSpeech(value) {
+  const v = String(value || "")
+    .toLowerCase()
+    .trim();
+  if (!v) return "other";
+
+  const alias = {
+    n: "noun",
+    noun: "noun",
+    v: "verb",
+    verb: "verb",
+    adj: "adjective",
+    adjective: "adjective",
+    adv: "adverb",
+    adverb: "adverb",
+    pron: "pronoun",
+    pronoun: "pronoun",
+    prep: "preposition",
+    preposition: "preposition",
+    det: "determiner",
+    determiner: "determiner",
+    interj: "interjection",
+    interjection: "interjection",
+    conj: "conjunction",
+    conjunction: "conjunction",
+    other: "other",
+  };
+
+  // Keep the first token if a source has combined tags like "verb; noun".
+  const head = v.split(/[;|/]/)[0].trim();
+  return alias[head] || "other";
+}
+
+function cefrToReadingLevel(cefr) {
+  const map = {
+    A1: 1,
+    A2: 2,
+    B1: 3,
+    B2: 4,
+    C1: 5,
+    C2: 6,
+  };
+  const key = String(cefr || "")
+    .toUpperCase()
+    .trim();
+  return map[key] || null;
+}
+
+function loadOxford3000WordsFromCsv() {
+  if (!fs.existsSync(OXFORD_3000_CSV_PATH)) {
+    process.stderr.write(
+      `Oxford CSV not found at ${OXFORD_3000_CSV_PATH}; using built-in list only.\n`,
+    );
+    return [];
+  }
+
+  const raw = fs.readFileSync(OXFORD_3000_CSV_PATH, "utf8");
+  const lines = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+
+  if (lines.length === 0) return [];
+
+  const header = parseCsvLine(lines[0]).map((h) => h.toLowerCase());
+  const wordIndex = header.indexOf("word");
+  const cefrIndex = header.indexOf("cefr");
+  const posIndex = header.indexOf("part_of_speech");
+
+  if (wordIndex < 0 || cefrIndex < 0) {
+    throw new Error(
+      "Oxford CSV must include at least 'word' and 'cefr' columns.",
+    );
+  }
+
+  const entries = [];
+  let skipped = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCsvLine(lines[i]);
+    const word = String(cols[wordIndex] || "")
+      .toLowerCase()
+      .trim();
+    const level = cefrToReadingLevel(cols[cefrIndex]);
+    const pos = normalizePartOfSpeech(posIndex >= 0 ? cols[posIndex] : "other");
+
+    if (!word || !level) {
+      skipped++;
+      continue;
+    }
+
+    // Skip phrase entries; this generator is for single-word targets.
+    if (/\s/.test(word)) {
+      skipped++;
+      continue;
+    }
+
+    entries.push([word, pos, level]);
+  }
+
+  process.stderr.write(
+    `Loaded ${entries.length} Oxford CSV entries (${skipped} skipped) from ${OXFORD_3000_CSV_PATH}.\n`,
+  );
+  return entries;
 }
 
 // ---------------------------------------------------------------------------
@@ -1717,7 +1860,9 @@ const DOLCH_WORDS = Object.entries(DOLCH_WORDS_BY_GRADE).flatMap(
     words.map((word) => [word, "other", DOLCH_READING_LEVEL[grade]]),
 );
 
-const ALL_WORDS = [...WORDS, ...DOLCH_WORDS];
+const OXFORD_3000_WORDS = loadOxford3000WordsFromCsv();
+
+const ALL_WORDS = [...WORDS, ...DOLCH_WORDS, ...OXFORD_3000_WORDS];
 
 // ---------------------------------------------------------------------------
 // Flatten nested arrays in part_of_speech (defensive)
@@ -1845,7 +1990,7 @@ process.stdout.write(lines.join("\n") + "\n");
 
 // Summary to stderr so it doesn't pollute the SQL output
 process.stderr.write(
-  `\nGenerated ${valueRows.length} word_sound rows for ${cleanedWords.length - skipped} words.\n`,
+  `\nGenerated ${valueRows.length} word_sound rows for ${deduped.length - skipped} words.\n`,
 );
 process.stderr.write(`Skipped ${skipped} words not found in CMU dict:\n`);
 process.stderr.write(skippedList.join(", ") + "\n");

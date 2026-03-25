@@ -120,7 +120,7 @@ Open `http://localhost:3000`.
 
 This repo now enforces migration immutability with a hash snapshot guard:
 
-- `supabase/migrations/_integrity.json` stores SHA-256 hashes of migration files.
+- `supabase/.migration-integrity.json` stores SHA-256 hashes of migration files.
 - `npm run db:push` now verifies previously snapshotted migrations are unchanged before pushing.
 - If verification passes and push succeeds, hashes are re-snapshotted automatically.
 - New migration files are allowed; editing old migration files is blocked.
@@ -275,6 +275,26 @@ Notes:
 ## Important Next Step
 
 Seed your `words` and `word_sounds` tables with your articulation curriculum data so recommendation quality improves immediately.
+
+## Oxford 3000 Full Import
+
+To include the full Oxford list with reading-level metadata in generated migrations:
+
+1. Add your source file at [scripts/data/oxford3000.csv](scripts/data/oxford3000.csv) using the format documented in [scripts/data/README.md](scripts/data/README.md).
+2. Generate migration SQL with:
+
+```bash
+node scripts/generate-word-migration.js > supabase/migrations/<timestamp>_oxford_fry_words.sql
+```
+
+The generator maps CEFR bands to reading levels:
+
+- `A1 -> 1`
+- `A2 -> 2`
+- `B1 -> 3`
+- `B2 -> 4`
+- `C1 -> 5`
+- `C2 -> 6`
 
 ## Project Init Steps
 

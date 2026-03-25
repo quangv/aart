@@ -10,8 +10,7 @@ const MIGRATIONS_DIR = path.join(REPO_ROOT, "supabase", "migrations");
 const INTEGRITY_FILE = path.join(
   REPO_ROOT,
   "supabase",
-  "migrations",
-  "_integrity.json",
+  ".migration-integrity.json",
 );
 
 function sha256File(filePath) {
@@ -54,7 +53,7 @@ function writeSnapshot() {
     "utf8",
   );
   console.log(
-    `Wrote migration integrity snapshot: supabase/migrations/_integrity.json (${snapshot.fileCount} files)`,
+    `Wrote migration integrity snapshot: supabase/.migration-integrity.json (${snapshot.fileCount} files)`,
   );
 }
 
@@ -68,7 +67,7 @@ function readSnapshot() {
 function verifySnapshot() {
   const saved = readSnapshot();
   if (!saved) {
-    console.error("Missing supabase/migrations/_integrity.json");
+    console.error("Missing supabase/.migration-integrity.json");
     console.error("Run: npm run db:migrations:snapshot");
     process.exit(1);
   }

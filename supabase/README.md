@@ -8,7 +8,7 @@ This directory contains Supabase configuration, schema definitions, and migratio
 
 This project includes an automated migration integrity guard to prevent accidental edits to historical migrations.
 
-- Snapshot file: `supabase/migrations/_integrity.json`
+- Snapshot file: `supabase/.migration-integrity.json`
 - Algorithm: SHA-256 per `supabase/migrations/*.sql`
 - Enforcement point: `npm run db:push` (local/prod wrappers)
 
