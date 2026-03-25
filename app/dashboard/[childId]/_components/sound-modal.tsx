@@ -21,7 +21,7 @@ function PositionScoreChart({
   showLegend = true,
 }: {
   recordsByPosition: Partial<Record<Position, ChartRecord[]>>;
-  visiblePositions?: Position[];
+  visiblePositions?: readonly Position[];
   height?: number;
   showLegend?: boolean;
 }) {
