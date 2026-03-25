@@ -141,23 +141,24 @@ export default function ReadingLevelFilteredSections({
   }
   const allWords = Array.from(allWordsById.values());
 
-  const rankedWords = allWords
-    .slice()
-    .sort((a, b) => {
-      const aRank = a.frequency_rank ?? Number.MAX_SAFE_INTEGER;
-      const bRank = b.frequency_rank ?? Number.MAX_SAFE_INTEGER;
-      if (a.reading_level !== b.reading_level) {
-        return a.reading_level - b.reading_level;
-      }
-      if (aRank !== bRank) {
-        return aRank - bRank;
-      }
-      return a.text.localeCompare(b.text);
-    });
+  const rankedWords = allWords.slice().sort((a, b) => {
+    const aRank = a.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+    const bRank = b.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+    if (a.reading_level !== b.reading_level) {
+      return a.reading_level - b.reading_level;
+    }
+    if (aRank !== bRank) {
+      return aRank - bRank;
+    }
+    return a.text.localeCompare(b.text);
+  });
 
   const levelBandByWordId = new Map<string, number>();
   for (let i = 0; i < rankedWords.length; i++) {
-    const band = Math.min(20, Math.floor((i * 20) / Math.max(1, rankedWords.length)) + 1);
+    const band = Math.min(
+      20,
+      Math.floor((i * 20) / Math.max(1, rankedWords.length)) + 1,
+    );
     levelBandByWordId.set(rankedWords[i].id, band);
   }
 
@@ -237,7 +238,11 @@ export default function ReadingLevelFilteredSections({
               {Array.from({ length: 20 }, (_, i) => i + 1).map((band) => {
                 const count = bandAvailability.get(band) ?? 0;
                 return (
-                  <option key={band} value={String(band)} disabled={count === 0}>
+                  <option
+                    key={band}
+                    value={String(band)}
+                    disabled={count === 0}
+                  >
                     Band {band} {count === 0 ? "(no words)" : `(${count})`}
                   </option>
                 );
@@ -278,7 +283,8 @@ export default function ReadingLevelFilteredSections({
             })}
           </div>
           <span className="text-xs text-[#7b6652]">
-            Saved on this device for this child. Bands with no matching words are blurred.
+            Saved on this device for this child. Bands with no matching words
+            are blurred.
           </span>
         </div>
       </section>
