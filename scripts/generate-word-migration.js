@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 /**
  * Generates a Supabase migration SQL file that adds Oxford 3000 core learner words
  * and Fry's first 1000 high-frequency words to the `words` + `word_sounds` tables.
@@ -15,12 +17,33 @@
 const fs = require("fs");
 const path = require("path");
 const dict = require("cmu-pronouncing-dictionary").dictionary;
+const popularEnglishWords = require("popular-english-words");
 const OXFORD_3000_CSV_PATH = path.join(
   process.cwd(),
   "scripts",
   "data",
   "oxford3000.csv",
 );
+
+function buildFrequencyRankMap() {
+  const map = new Map();
+  try {
+    const list = popularEnglishWords.words.getAll();
+    for (let i = 0; i < list.length; i++) {
+      map.set(String(list[i]).toLowerCase(), i + 1);
+    }
+    process.stderr.write(
+      `Loaded ${list.length} corpus frequency entries from popular-english-words.\n`,
+    );
+  } catch {
+    process.stderr.write(
+      "Could not load popular-english-words; falling back to insertion-order frequency ranks.\n",
+    );
+  }
+  return map;
+}
+
+const FREQUENCY_RANK_BY_WORD = buildFrequencyRankMap();
 
 // ---------------------------------------------------------------------------
 // ARPABET → app IPA code (the 39 phonemes in public.sounds)
@@ -1948,7 +1971,8 @@ const skippedList = [];
 
 for (let i = 0; i < deduped.length; i++) {
   const [word, pos, level] = deduped[i];
-  const frequencyRank = i + 1;
+  const frequencyRank =
+    FREQUENCY_RANK_BY_WORD.get(word.toLowerCase()) ?? 500000 + i + 1;
   const data = getWordData(word);
   if (!data) {
     skipped++;

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-03-25T04:34:15.962Z",
+  "generatedAt": "2026-03-25T05:15:18.221Z",
   "migrationsDir": "supabase/migrations",
-  "fileCount": 20,
+  "fileCount": 21,
   "hashes": {
     "20260322000100_init.sql": "04e8f8ff967fecaebc3263a42f5ddfc9c7c40f4aeb9dfb0d8bc7eaa6eea34410",
     "20260322000200_birth_date_month_year_only.sql": "4d118fbbfb71fcbc97fbc87165320ffbfe6fe0074d12c6c1eb2fca7fd917b5a1",
@@ -24,6 +24,7 @@
     "20260325000200_add_dolch_sight_words.sql": "8f375caf306732383a6d23cf583e574819d7838ddf9b602954f1f5fd98f57a88",
     "20260325000300_add_oxford3000_csv_words.sql": "861c06eb756f4e955ff5ccbde82e7093c9b48e1336a1753bda3d7b6098946d3a",
     "20260325000400_rebalance_oxford_reading_levels.sql": "9d631c06d62bea4cfea2194f6c02fdacce3c0604cea33fd0f81b6cd6410df441",
-    "20260325000500_add_word_frequency_rank.sql": "fde8b80d54121e2f57aec9cb73c34161f609ef05803fbd45ef6c3de6e6c2666b"
+    "20260325000500_add_word_frequency_rank.sql": "fde8b80d54121e2f57aec9cb73c34161f609ef05803fbd45ef6c3de6e6c2666b",
+    "20260325000600_reseed_frequency_rank_from_corpus.sql": "c273dfa5dadaca5024b6efc277ff7d597a3d7fda57dac302baf91c89259219d7"
   }
 }

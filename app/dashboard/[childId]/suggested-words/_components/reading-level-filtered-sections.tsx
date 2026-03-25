@@ -234,7 +234,7 @@ export default function ReadingLevelFilteredSections({
               onChange={(event) => handleBandChange(event.target.value)}
               className="rounded-lg border border-[#e8b795] bg-white px-3 py-2 text-sm text-[#2f2a26] focus:border-[#2d78c4] focus:outline-none"
             >
-              <option value="all">All bands</option>
+              <option value="all">All levels</option>
               {Array.from({ length: 20 }, (_, i) => i + 1).map((band) => {
                 const count = bandAvailability.get(band) ?? 0;
                 return (
@@ -243,7 +243,7 @@ export default function ReadingLevelFilteredSections({
                     value={String(band)}
                     disabled={count === 0}
                   >
-                    Band {band} {count === 0 ? "(no words)" : `(${count})`}
+                    Level {band} {count === 0 ? "(no words)" : `(${count})`}
                   </option>
                 );
               })}

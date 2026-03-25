@@ -515,8 +515,8 @@ export default function SoundModal({
                   </div>
                 ) : null}
                 <div className="rounded-2xl border border-[#f7dfce] bg-white px-4 py-3 text-xs text-[#5f4a37]">
-                  Read mode: review each position, then click Add to log score
-                  and notes.
+                  Read mode: review each position, then click Update to log
+                  score and notes.
                 </div>
 
                 <div className="mt-4 rounded-2xl border border-[#efc8ab] bg-white px-3 py-2">
@@ -568,7 +568,7 @@ export default function SoundModal({
                             onClick={() => openAdd(position)}
                             className="rounded-lg bg-[#2d78c4] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2367aa]"
                           >
-                            Add
+                            Update
                           </button>
                         </div>
 
@@ -634,7 +634,7 @@ export default function SoundModal({
                     </button>
                   </div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#5f4a37]">
-                    Add score - {activePosition}
+                    Update score - {activePosition}
                   </p>
 
                   {/* Score-over-time chart */}
