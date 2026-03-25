@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { words as popularEnglishWords } from "popular-english-words";
 
 type SuggestionWord = {
   id: string;
@@ -10,6 +11,37 @@ type SuggestionWord = {
 };
 
 type WordSectionTone = "mastered" | "working" | "stretch";
+
+const TOP_COMMON_WORD_LIMIT = 5000;
+const topCommonWordSet = new Set(
+  popularEnglishWords
+    .getMostPopular(TOP_COMMON_WORD_LIMIT)
+    .map((word) => word.toLowerCase()),
+);
+
+function normalizeWordForCommonList(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/^[^a-z]+|[^a-z]+$/g, "");
+}
+
+function isTopCommonWord(word: SuggestionWord): boolean {
+  const normalizedWord = normalizeWordForCommonList(word.text);
+  if (!normalizedWord) {
+    return false;
+  }
+  if (topCommonWordSet.has(normalizedWord)) {
+    return true;
+  }
+
+  // Keep backward compatibility with DB-side frequency ranks when present.
+  return (
+    typeof word.frequency_rank === "number" &&
+    word.frequency_rank > 0 &&
+    word.frequency_rank <= TOP_COMMON_WORD_LIMIT
+  );
+}
 
 function WordSection({
   title,
@@ -162,19 +194,10 @@ export default function ReadingLevelFilteredSections({
     levelBandByWordId.set(rankedWords[i].id, band);
   }
 
-  const rankValues = allWords
-    .map((word) => word.frequency_rank)
-    .filter((v): v is number => typeof v === "number")
-    .sort((a, b) => a - b);
-  const commonCutoff = rankValues.length
-    ? rankValues[Math.floor(rankValues.length * 0.6)]
-    : Number.MAX_SAFE_INTEGER;
-
   const filterWords = (words: SuggestionWord[]) => {
     return words.filter((word) => {
-      if (hideUncommon) {
-        const rank = word.frequency_rank ?? Number.MAX_SAFE_INTEGER;
-        if (rank > commonCutoff) return false;
+      if (hideUncommon && !isTopCommonWord(word)) {
+        return false;
       }
       if (selectedBand === "all") return true;
       const band = levelBandByWordId.get(word.id);
@@ -188,9 +211,8 @@ export default function ReadingLevelFilteredSections({
 
   const bandAvailability = new Map<number, number>();
   for (const word of allWords) {
-    if (hideUncommon) {
-      const rank = word.frequency_rank ?? Number.MAX_SAFE_INTEGER;
-      if (rank > commonCutoff) continue;
+    if (hideUncommon && !isTopCommonWord(word)) {
+      continue;
     }
     const band = levelBandByWordId.get(word.id);
     if (!band) continue;
@@ -257,7 +279,7 @@ export default function ReadingLevelFilteredSections({
                 }
                 className="h-4 w-4 rounded border-[#e8b795]"
               />
-              Hide uncommon words
+              Hide uncommon words (not in top 5000)
             </label>
           </div>
           <div className="flex flex-wrap gap-2">

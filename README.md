@@ -33,6 +33,40 @@ The app stores:
 
 Suggestions are generated only from sound-position targets the child has mastered.
 
+## macOS Prerequisites
+
+This project's local database runs through the Supabase CLI, which uses Docker.
+
+1. Install Docker Desktop
+
+```bash
+brew install --cask docker
+open -a Docker
+```
+
+Wait until Docker Desktop finishes starting, then verify Docker is working:
+
+```bash
+docker --version
+docker info
+docker ps
+```
+
+Expected result:
+
+- `docker --version` prints a version
+- `docker info` returns Docker engine details without connection errors
+- `docker ps` prints a container table, even if it is empty
+
+2. Install Supabase CLI
+
+```bash
+brew install supabase/tap/supabase
+supabase --version
+```
+
+If `supabase --version` prints a version, the CLI is installed correctly.
+
 ## Local Setup
 
 1. Install dependencies
@@ -91,13 +125,48 @@ supabase link --project-ref <your-project-ref>
 
 `project-ref` is your Supabase project id (for example: `gayindulqnrngbpuqixl`).
 
-4. Apply database migrations
+4. If you want to run the local Docker database instead of the hosted Supabase project, update `.env.local` to:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+5. Start the local Supabase Docker stack
+
+```bash
+npm run db:start
+npm run db:status
+```
+
+Expected local services:
+
+- API: `http://127.0.0.1:54321`
+- Postgres: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+- Studio: `http://127.0.0.1:54323`
+
+6. Initialize the local database schema
+
+For a fresh local setup, rebuild the database from migrations and seed data:
+
+```bash
+npm run db:reset
+```
+
+If the local DB already exists and you only want to apply new pending migrations:
+
+```bash
+npm run db:migrate:local
+```
+
+7. Apply database migrations to the linked remote project
 
 ```bash
 npm run db:push
 ```
 
-5. Start development server
+8. Start development server
 
 ```bash
 npm run dev
@@ -105,7 +174,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-6. Configure Supabase Auth redirect URLs (required for forgot password)
+9. Configure Supabase Auth redirect URLs (required for forgot password)
 
 - Supabase Dashboard -> Authentication -> URL Configuration
 - Add Site URL (local/dev): `http://localhost:3000`
