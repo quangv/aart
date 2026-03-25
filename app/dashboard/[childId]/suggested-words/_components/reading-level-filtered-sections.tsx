@@ -201,7 +201,9 @@ export default function ReadingLevelFilteredSections({
       }
       if (selectedBand === "all") return true;
       const band = levelBandByWordId.get(word.id);
-      return band === Number.parseInt(selectedBand, 10);
+      return (
+        typeof band === "number" && band <= Number.parseInt(selectedBand, 10)
+      );
     });
   };
 
@@ -305,8 +307,8 @@ export default function ReadingLevelFilteredSections({
             })}
           </div>
           <span className="text-xs text-[#7b6652]">
-            Saved on this device for this child. Bands with no matching words
-            are blurred.
+            Saved on this device for this child. Higher levels include words
+            from earlier levels too. Bands with no matching words are blurred.
           </span>
         </div>
       </section>
