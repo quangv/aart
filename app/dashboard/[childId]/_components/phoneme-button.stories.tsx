@@ -19,6 +19,7 @@ export const Default: Story = {};
 export const Mastered: Story = {
   args: {
     mastered: true,
+    score: 9.1,
   },
 };
 
@@ -26,5 +27,17 @@ export const LongLabel: Story = {
   args: {
     ipa: "/aɪ/",
     label: "Long I diphthong",
+  },
+};
+
+export const InProgress: Story = {
+  args: {
+    score: 6.3,
+  },
+};
+
+export const EarlyProgress: Story = {
+  args: {
+    score: 2.4,
   },
 };
