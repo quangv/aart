@@ -14,6 +14,13 @@ const positionColors: Record<Position, { line: string; dot: string }> = {
   end: { line: "#5f8c3b", dot: "#4f742f" },
 };
 
+function formatActionError(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return "Request failed. Please try again.";
+}
+
 function PositionScoreChart({
   recordsByPosition,
   visiblePositions = positions,
@@ -343,50 +350,59 @@ export default function SoundModal({
   function handleEditSave(record: ScoreRecord) {
     if (!updateRecordAction || !activePosition) return;
     startEditTransition(async () => {
-      const result = await updateRecordAction(
-        record.id,
-        editScore,
-        editNote || null,
-        childId,
-      );
-      if ("error" in result) {
-        setRecordError(result.error);
-        return;
+      try {
+        const result = await updateRecordAction(
+          record.id,
+          editScore,
+          editNote || null,
+          childId,
+        );
+        if ("error" in result) {
+          setRecordError(result.error);
+          return;
+        }
+        const updatedHistory = (localHistory[activePosition] ?? []).map((r) =>
+          r.id === result.id
+            ? { ...r, score: result.score, notes: result.notes }
+            : r,
+        );
+        setLocalHistory((prev) => ({
+          ...prev,
+          [activePosition]: updatedHistory,
+        }));
+        recomputeProgress(activePosition, updatedHistory);
+        setEditingRecordId(null);
+        setRecordError(null);
+      } catch (error) {
+        setRecordError(formatActionError(error));
       }
-      const updatedHistory = (localHistory[activePosition] ?? []).map((r) =>
-        r.id === result.id
-          ? { ...r, score: result.score, notes: result.notes }
-          : r,
-      );
-      setLocalHistory((prev) => ({
-        ...prev,
-        [activePosition]: updatedHistory,
-      }));
-      recomputeProgress(activePosition, updatedHistory);
-      setEditingRecordId(null);
-      setRecordError(null);
     });
   }
 
   function handleDelete(recordId: number) {
     if (!deleteRecordAction || !activePosition) return;
     startDeleteTransition(async () => {
-      const result = await deleteRecordAction(recordId, childId);
-      if ("error" in result) {
-        setRecordError(result.error);
+      try {
+        const result = await deleteRecordAction(recordId, childId);
+        if ("error" in result) {
+          setRecordError(result.error);
+          setConfirmingDeleteId(null);
+          return;
+        }
+        const updatedHistory = (localHistory[activePosition] ?? []).filter(
+          (r) => r.id !== result.deletedId,
+        );
+        setLocalHistory((prev) => ({
+          ...prev,
+          [activePosition]: updatedHistory,
+        }));
+        recomputeProgress(activePosition, updatedHistory);
         setConfirmingDeleteId(null);
-        return;
+        setRecordError(null);
+      } catch (error) {
+        setRecordError(formatActionError(error));
+        setConfirmingDeleteId(null);
       }
-      const updatedHistory = (localHistory[activePosition] ?? []).filter(
-        (r) => r.id !== result.deletedId,
-      );
-      setLocalHistory((prev) => ({
-        ...prev,
-        [activePosition]: updatedHistory,
-      }));
-      recomputeProgress(activePosition, updatedHistory);
-      setConfirmingDeleteId(null);
-      setRecordError(null);
     });
   }
 
@@ -396,40 +412,44 @@ export default function SoundModal({
     const formData = new FormData(e.currentTarget);
     setSubmitError(null);
     startTransition(async () => {
-      const result = await progressAction(formData);
-      if ("error" in result) {
-        setSubmitError(result.error);
-        return;
-      }
-      const savedPosition = activePosition;
-      const newRecord: ScoreRecord = {
-        id: result.id,
-        score: result.score,
-        notes: result.notes,
-        recorded_at: result.recorded_at,
-      };
-      setLocalProgress((prev) => ({
-        ...prev,
-        [savedPosition]: {
-          ...prev[savedPosition],
+      try {
+        const result = await progressAction(formData);
+        if ("error" in result) {
+          setSubmitError(result.error);
+          return;
+        }
+        const savedPosition = activePosition;
+        const newRecord: ScoreRecord = {
+          id: result.id,
           score: result.score,
           notes: result.notes,
-          attempts: (prev[savedPosition]?.attempts ?? 0) + 1,
-          mastered: result.score >= 8,
-        },
-      }));
-      setScores((prev) => ({ ...prev, [savedPosition]: result.score }));
-      setLocalHistory((prev) => ({
-        ...prev,
-        [savedPosition]: [newRecord, ...(prev[savedPosition] ?? [])],
-      }));
-      setActivePosition(null);
-      setSuccessPosition(savedPosition);
-      if (successTimerRef.current) clearTimeout(successTimerRef.current);
-      successTimerRef.current = setTimeout(
-        () => setSuccessPosition(null),
-        3000,
-      );
+          recorded_at: result.recorded_at,
+        };
+        setLocalProgress((prev) => ({
+          ...prev,
+          [savedPosition]: {
+            ...prev[savedPosition],
+            score: result.score,
+            notes: result.notes,
+            attempts: (prev[savedPosition]?.attempts ?? 0) + 1,
+            mastered: result.score >= 8,
+          },
+        }));
+        setScores((prev) => ({ ...prev, [savedPosition]: result.score }));
+        setLocalHistory((prev) => ({
+          ...prev,
+          [savedPosition]: [newRecord, ...(prev[savedPosition] ?? [])],
+        }));
+        setActivePosition(null);
+        setSuccessPosition(savedPosition);
+        if (successTimerRef.current) clearTimeout(successTimerRef.current);
+        successTimerRef.current = setTimeout(
+          () => setSuccessPosition(null),
+          3000,
+        );
+      } catch (error) {
+        setSubmitError(formatActionError(error));
+      }
     });
   }
 

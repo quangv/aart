@@ -14,6 +14,22 @@ type RecommendationResult = {
   sentences: string[];
 };
 
+type PracticePlanWord = SuggestionWord & {
+  matchedTopPhonemeCount: number;
+};
+
+type PracticePlanResult = {
+  topPhonemes: {
+    soundId: string;
+    code: string;
+    label: string;
+    avgScore: number;
+  }[];
+  masteredWords: PracticePlanWord[];
+  workingWords: PracticePlanWord[];
+  stretchWords: PracticePlanWord[];
+};
+
 const positions: Database["public"]["Enums"]["sound_position"][] = [
   "beginning",
   "middle",
@@ -188,5 +204,188 @@ export async function getRecommendationsForChild(
     words,
     phrases: phrases.slice(0, 8),
     sentences: sentences.slice(0, 8),
+  };
+}
+
+export async function getWordPracticePlanForChild(
+  supabase: SupabaseClient<Database>,
+  childId: string,
+): Promise<PracticePlanResult> {
+  const { data: sounds, error: soundsError } = await supabase
+    .from("sounds")
+    .select("id, code, label, ipa");
+
+  if (soundsError) {
+    throw soundsError;
+  }
+
+  const { data: progressRows, error: progressError } = await supabase
+    .from("child_sound_progress")
+    .select("sound_id, position, score, attempts, mastered")
+    .eq("child_id", childId);
+
+  if (progressError) {
+    throw progressError;
+  }
+
+  const { data: wordRows, error: wordsError } = await supabase
+    .from("words")
+    .select("id, text, reading_level, part_of_speech");
+
+  if (wordsError) {
+    throw wordsError;
+  }
+
+  const { data: wordSoundRows, error: wordSoundError } = await supabase
+    .from("word_sounds")
+    .select("word_id, sound_id, position, sequence_index")
+    .order("word_id")
+    .order("sequence_index");
+
+  if (wordSoundError) {
+    throw wordSoundError;
+  }
+
+  const progressByKey = new Map<
+    string,
+    { score: number; attempts: number; mastered: boolean }
+  >();
+  for (const row of progressRows ?? []) {
+    progressByKey.set(`${row.sound_id}:${row.position}`, {
+      score: row.score,
+      attempts: row.attempts,
+      mastered: row.mastered,
+    });
+  }
+
+  const byWord = new Map<
+    string,
+    {
+      word: SuggestionWord;
+      segments: {
+        soundId: string;
+        position: Database["public"]["Enums"]["sound_position"];
+      }[];
+    }
+  >();
+
+  const wordById = new Map<string, SuggestionWord>();
+  for (const word of wordRows ?? []) {
+    wordById.set(word.id, word);
+  }
+
+  for (const row of wordSoundRows ?? []) {
+    const word = wordById.get(row.word_id);
+    if (!word || !positions.includes(row.position)) {
+      continue;
+    }
+
+    const existing = byWord.get(row.word_id);
+    if (existing) {
+      existing.segments.push({ soundId: row.sound_id, position: row.position });
+      continue;
+    }
+
+    byWord.set(row.word_id, {
+      word,
+      segments: [{ soundId: row.sound_id, position: row.position }],
+    });
+  }
+
+  const topPhonemes = (sounds ?? [])
+    .map((sound) => {
+      const sum = positions.reduce((acc, position) => {
+        const row = progressByKey.get(`${sound.id}:${position}`);
+        return acc + (row?.score ?? 0);
+      }, 0);
+      const avgScore = sum / 3;
+      const hasAnyProgress = positions.some((position) => {
+        const row = progressByKey.get(`${sound.id}:${position}`);
+        return Boolean(
+          row && (row.mastered || row.score > 0 || row.attempts > 0),
+        );
+      });
+
+      return {
+        soundId: sound.id,
+        code: sound.code,
+        label: sound.ipa ?? sound.label ?? sound.code,
+        avgScore,
+        hasAnyProgress,
+      };
+    })
+    .filter((item) => item.hasAnyProgress)
+    .sort((a, b) => {
+      if (b.avgScore !== a.avgScore) return b.avgScore - a.avgScore;
+      return a.code.localeCompare(b.code);
+    })
+    .slice(0, 8)
+    .map(({ hasAnyProgress, ...item }) => item);
+
+  const topPhonemeSet = new Set(topPhonemes.map((item) => item.soundId));
+
+  const masteredWords: PracticePlanWord[] = [];
+  const workingWords: PracticePlanWord[] = [];
+  const stretchWords: PracticePlanWord[] = [];
+
+  for (const entry of byWord.values()) {
+    const matchedTopPhonemeCount = entry.segments.filter((segment) =>
+      topPhonemeSet.has(segment.soundId),
+    ).length;
+
+    if (matchedTopPhonemeCount === 0) {
+      continue;
+    }
+
+    let masteredCount = 0;
+    let workingCount = 0;
+
+    for (const segment of entry.segments) {
+      const row = progressByKey.get(`${segment.soundId}:${segment.position}`);
+      if (!row) continue;
+      if (row.mastered) {
+        masteredCount += 1;
+      } else if (row.score > 0 || row.attempts > 0) {
+        workingCount += 1;
+      }
+    }
+
+    const wordWithMeta: PracticePlanWord = {
+      ...entry.word,
+      matchedTopPhonemeCount,
+    };
+
+    if (masteredCount === entry.segments.length) {
+      masteredWords.push(wordWithMeta);
+      continue;
+    }
+
+    if (workingCount > 0 || masteredCount > 0) {
+      workingWords.push(wordWithMeta);
+      continue;
+    }
+
+    stretchWords.push(wordWithMeta);
+  }
+
+  const sorter = (a: PracticePlanWord, b: PracticePlanWord) => {
+    if (b.matchedTopPhonemeCount !== a.matchedTopPhonemeCount) {
+      return b.matchedTopPhonemeCount - a.matchedTopPhonemeCount;
+    }
+    if (a.reading_level !== b.reading_level) {
+      return a.reading_level - b.reading_level;
+    }
+    return a.text.localeCompare(b.text);
+  };
+
+  masteredWords.sort(sorter);
+  workingWords.sort(sorter);
+  stretchWords.sort(sorter);
+
+  return {
+    topPhonemes,
+    masteredWords: masteredWords.slice(0, 24),
+    workingWords: workingWords.slice(0, 24),
+    stretchWords: stretchWords.slice(0, 24),
   };
 }

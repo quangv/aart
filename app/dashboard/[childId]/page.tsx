@@ -267,9 +267,17 @@ export default async function ChildDetailPage({
 
         <div className="space-y-6 xl:col-span-1">
           <section className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-[#2f2a26]">
-              Suggested Words
-            </h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-xl font-semibold text-[#2f2a26]">
+                Suggested Words
+              </h2>
+              <Link
+                href={`/dashboard/${childId}/suggested-words`}
+                className="shrink-0 rounded-lg border border-[#bfd6ef] bg-[#eef6ff] px-3 py-1.5 text-xs font-semibold text-[#2d5f8f] transition hover:bg-[#dcecff]"
+              >
+                Open Full List
+              </Link>
+            </div>
             <p className="mt-2 text-sm text-[#5f4a37]">
               Generated from sounds currently mastered for this child.
             </p>
