@@ -185,6 +185,31 @@ function cefrToReadingLevel(cefr) {
   return map[key] || null;
 }
 
+function inferReadingLevelFromWordDifficulty(word) {
+  const w = String(word || "").toLowerCase().trim();
+  if (!w) return 5;
+
+  let levelByLength = 2;
+  if (w.length <= 3) levelByLength = 1;
+  else if (w.length <= 5) levelByLength = 2;
+  else if (w.length <= 7) levelByLength = 3;
+  else if (w.length <= 9) levelByLength = 4;
+  else levelByLength = 5;
+
+  // Prefer CMU syllable count when available; otherwise use rough vowel groups.
+  const pronunciation = dict[w];
+  const syllables = pronunciation
+    ? pronunciation.split(" ").filter((p) => /[012]$/.test(p)).length
+    : (w.match(/[aeiouy]+/g) || []).length;
+
+  let levelBySyllables = 1;
+  if (syllables >= 4) levelBySyllables = 5;
+  else if (syllables === 3) levelBySyllables = 4;
+  else if (syllables === 2) levelBySyllables = 2;
+
+  return Math.max(levelByLength, levelBySyllables);
+}
+
 function loadOxford3000WordsFromCsv() {
   if (!fs.existsSync(OXFORD_3000_CSV_PATH)) {
     process.stderr.write(
@@ -214,17 +239,27 @@ function loadOxford3000WordsFromCsv() {
 
   const entries = [];
   let skipped = 0;
+  let inferredLevelCount = 0;
+  let bumpedByDifficultyCount = 0;
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);
     const word = String(cols[wordIndex] || "")
       .toLowerCase()
       .trim();
-    const level = cefrToReadingLevel(cols[cefrIndex]);
+    const cefrLevel = cefrToReadingLevel(cols[cefrIndex]);
+    const difficultyFloor = inferReadingLevelFromWordDifficulty(word);
+    const level = cefrLevel === null ? difficultyFloor : Math.max(cefrLevel, difficultyFloor);
     const pos = normalizePartOfSpeech(posIndex >= 0 ? cols[posIndex] : "other");
 
-    if (!word || !level) {
+    if (!word) {
       skipped++;
       continue;
+    }
+
+    if (cefrLevel === null) {
+      inferredLevelCount++;
+    } else if (difficultyFloor > cefrLevel) {
+      bumpedByDifficultyCount++;
     }
 
     // Skip phrase entries; this generator is for single-word targets.
@@ -238,6 +273,9 @@ function loadOxford3000WordsFromCsv() {
 
   process.stderr.write(
     `Loaded ${entries.length} Oxford CSV entries (${skipped} skipped) from ${OXFORD_3000_CSV_PATH}.\n`,
+  );
+  process.stderr.write(
+    `Oxford level normalization: ${inferredLevelCount} inferred (missing CEFR), ${bumpedByDifficultyCount} bumped by difficulty floor.\n`,
   );
   return entries;
 }

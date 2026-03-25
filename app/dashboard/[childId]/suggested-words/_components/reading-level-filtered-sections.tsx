@@ -70,17 +70,28 @@ export default function ReadingLevelFilteredSections({
   stretchWords: SuggestionWord[];
 }) {
   const storageKey = `aart:suggestedWords:maxReadingLevel:${childId}`;
-  const [maxReadingLevel, setMaxReadingLevel] = useState<string>(() => {
-    if (typeof window === "undefined") {
-      return "all";
+  const [maxReadingLevel, setMaxReadingLevel] = useState<string>("all");
+
+  useEffect(() => {
+    let timeoutId: number | null = null;
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      if (saved && saved !== "all") {
+        // Defer update so hydration uses the same initial UI as server render.
+        timeoutId = window.setTimeout(() => {
+          setMaxReadingLevel(saved);
+        }, 0);
+      }
+    } catch {
+      // Ignore storage read failures and keep default.
     }
 
-    try {
-      return window.localStorage.getItem(storageKey) ?? "all";
-    } catch {
-      return "all";
-    }
-  });
+    return () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [storageKey]);
 
   useEffect(() => {
     try {

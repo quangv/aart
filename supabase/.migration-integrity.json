@@ -1,9 +1,9 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-03-25T04:07:39.651Z",
+  "generatedAt": "2026-03-25T04:22:02.247Z",
   "migrationsDir": "supabase/migrations",
-  "fileCount": 18,
+  "fileCount": 19,
   "hashes": {
     "20260322000100_init.sql": "04e8f8ff967fecaebc3263a42f5ddfc9c7c40f4aeb9dfb0d8bc7eaa6eea34410",
     "20260322000200_birth_date_month_year_only.sql": "4d118fbbfb71fcbc97fbc87165320ffbfe6fe0074d12c6c1eb2fca7fd917b5a1",
@@ -22,6 +22,7 @@
     "20260324000900_progress_records_update_delete_policies.sql": "44da4c6aaaddf2801d594c2aa25a77ba29daf63b49686cccba6ff5fcd045228a",
     "20260325000100_oxford_fry_word_corpus.sql": "d4d65b24eb885245089a33923f8859b01b64392fe4cb236195722bb40bd7f27d",
     "20260325000200_add_dolch_sight_words.sql": "8f375caf306732383a6d23cf583e574819d7838ddf9b602954f1f5fd98f57a88",
-    "20260325000300_add_oxford3000_csv_words.sql": "861c06eb756f4e955ff5ccbde82e7093c9b48e1336a1753bda3d7b6098946d3a"
+    "20260325000300_add_oxford3000_csv_words.sql": "861c06eb756f4e955ff5ccbde82e7093c9b48e1336a1753bda3d7b6098946d3a",
+    "20260325000400_rebalance_oxford_reading_levels.sql": "9d631c06d62bea4cfea2194f6c02fdacce3c0604cea33fd0f81b6cd6410df441"
   }
 }
