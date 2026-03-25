@@ -5,6 +5,7 @@ type SuggestionWord = {
   id: string;
   text: string;
   reading_level: number;
+  frequency_rank: number | null;
   part_of_speech: Database["public"]["Enums"]["part_of_speech"];
 };
 
@@ -92,7 +93,7 @@ export async function getRecommendationsForChild(
 
   const { data: wordRows, error: wordsError } = await supabase
     .from("words")
-    .select("id, text, reading_level, part_of_speech");
+    .select("id, text, reading_level, frequency_rank, part_of_speech");
 
   if (wordsError) {
     throw wordsError;
@@ -230,7 +231,7 @@ export async function getWordPracticePlanForChild(
 
   const { data: wordRows, error: wordsError } = await supabase
     .from("words")
-    .select("id, text, reading_level, part_of_speech");
+    .select("id, text, reading_level, frequency_rank, part_of_speech");
 
   if (wordsError) {
     throw wordsError;
@@ -372,6 +373,11 @@ export async function getWordPracticePlanForChild(
     if (b.matchedTopPhonemeCount !== a.matchedTopPhonemeCount) {
       return b.matchedTopPhonemeCount - a.matchedTopPhonemeCount;
     }
+    const aRank = a.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+    const bRank = b.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) {
+      return aRank - bRank;
+    }
     if (a.reading_level !== b.reading_level) {
       return a.reading_level - b.reading_level;
     }
@@ -384,8 +390,8 @@ export async function getWordPracticePlanForChild(
 
   return {
     topPhonemes,
-    masteredWords: masteredWords.slice(0, 24),
-    workingWords: workingWords.slice(0, 24),
-    stretchWords: stretchWords.slice(0, 24),
+    masteredWords,
+    workingWords,
+    stretchWords,
   };
 }

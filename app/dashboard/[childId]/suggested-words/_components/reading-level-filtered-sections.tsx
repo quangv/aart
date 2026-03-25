@@ -6,6 +6,7 @@ type SuggestionWord = {
   id: string;
   text: string;
   reading_level: number;
+  frequency_rank: number | null;
 };
 
 type WordSectionTone = "mastered" | "working" | "stretch";
@@ -69,17 +70,46 @@ export default function ReadingLevelFilteredSections({
   workingWords: SuggestionWord[];
   stretchWords: SuggestionWord[];
 }) {
-  const storageKey = `aart:suggestedWords:maxReadingLevel:${childId}`;
-  const [maxReadingLevel, setMaxReadingLevel] = useState<string>("all");
+  const levelStorageKey = `aart:suggestedWords:band:${childId}`;
+  const uncommonStorageKey = `aart:suggestedWords:hideUncommon:${childId}`;
+  const [selectedBand, setSelectedBand] = useState<string>("all");
+  const [hideUncommon, setHideUncommon] = useState<boolean>(false);
+  const [masteredPage, setMasteredPage] = useState(1);
+  const [workingPage, setWorkingPage] = useState(1);
+  const [stretchPage, setStretchPage] = useState(1);
+  const perPage = 24;
+
+  const resetPages = () => {
+    setMasteredPage(1);
+    setWorkingPage(1);
+    setStretchPage(1);
+  };
+
+  const handleBandChange = (value: string) => {
+    setSelectedBand(value);
+    resetPages();
+  };
+
+  const handleHideUncommonChange = (checked: boolean) => {
+    setHideUncommon(checked);
+    resetPages();
+  };
 
   useEffect(() => {
     let timeoutId: number | null = null;
+    let uncommonTimeoutId: number | null = null;
     try {
-      const saved = window.localStorage.getItem(storageKey);
-      if (saved && saved !== "all") {
+      const savedBand = window.localStorage.getItem(levelStorageKey);
+      const savedUncommon = window.localStorage.getItem(uncommonStorageKey);
+      if (savedBand && savedBand !== "all") {
         // Defer update so hydration uses the same initial UI as server render.
         timeoutId = window.setTimeout(() => {
-          setMaxReadingLevel(saved);
+          setSelectedBand(savedBand);
+        }, 0);
+      }
+      if (savedUncommon === "1") {
+        uncommonTimeoutId = window.setTimeout(() => {
+          setHideUncommon(true);
         }, 0);
       }
     } catch {
@@ -90,36 +120,96 @@ export default function ReadingLevelFilteredSections({
       if (timeoutId !== null) {
         window.clearTimeout(timeoutId);
       }
+      if (uncommonTimeoutId !== null) {
+        window.clearTimeout(uncommonTimeoutId);
+      }
     };
-  }, [storageKey]);
+  }, [levelStorageKey, uncommonStorageKey]);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(storageKey, maxReadingLevel);
+      window.localStorage.setItem(levelStorageKey, selectedBand);
+      window.localStorage.setItem(uncommonStorageKey, hideUncommon ? "1" : "0");
     } catch {
       // Ignore storage write failures.
     }
-  }, [storageKey, maxReadingLevel]);
+  }, [levelStorageKey, uncommonStorageKey, selectedBand, hideUncommon]);
 
-  const toMaxLevel = (value: string): number | null => {
-    if (value === "all") return null;
-    const parsed = Number.parseInt(value, 10);
-    return Number.isNaN(parsed) ? null : parsed;
+  const allWordsById = new Map<string, SuggestionWord>();
+  for (const word of [...masteredWords, ...workingWords, ...stretchWords]) {
+    allWordsById.set(word.id, word);
+  }
+  const allWords = Array.from(allWordsById.values());
+
+  const rankedWords = allWords
+    .slice()
+    .sort((a, b) => {
+      const aRank = a.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+      const bRank = b.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+      if (a.reading_level !== b.reading_level) {
+        return a.reading_level - b.reading_level;
+      }
+      if (aRank !== bRank) {
+        return aRank - bRank;
+      }
+      return a.text.localeCompare(b.text);
+    });
+
+  const levelBandByWordId = new Map<string, number>();
+  for (let i = 0; i < rankedWords.length; i++) {
+    const band = Math.min(20, Math.floor((i * 20) / Math.max(1, rankedWords.length)) + 1);
+    levelBandByWordId.set(rankedWords[i].id, band);
+  }
+
+  const rankValues = allWords
+    .map((word) => word.frequency_rank)
+    .filter((v): v is number => typeof v === "number")
+    .sort((a, b) => a - b);
+  const commonCutoff = rankValues.length
+    ? rankValues[Math.floor(rankValues.length * 0.6)]
+    : Number.MAX_SAFE_INTEGER;
+
+  const filterWords = (words: SuggestionWord[]) => {
+    return words.filter((word) => {
+      if (hideUncommon) {
+        const rank = word.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+        if (rank > commonCutoff) return false;
+      }
+      if (selectedBand === "all") return true;
+      const band = levelBandByWordId.get(word.id);
+      return band === Number.parseInt(selectedBand, 10);
+    });
   };
 
-  const maxLevel = toMaxLevel(maxReadingLevel);
-  const filteredMastered =
-    maxLevel === null
-      ? masteredWords
-      : masteredWords.filter((word) => word.reading_level <= maxLevel);
-  const filteredWorking =
-    maxLevel === null
-      ? workingWords
-      : workingWords.filter((word) => word.reading_level <= maxLevel);
-  const filteredStretch =
-    maxLevel === null
-      ? stretchWords
-      : stretchWords.filter((word) => word.reading_level <= maxLevel);
+  const filteredMastered = filterWords(masteredWords);
+  const filteredWorking = filterWords(workingWords);
+  const filteredStretch = filterWords(stretchWords);
+
+  const bandAvailability = new Map<number, number>();
+  for (const word of allWords) {
+    if (hideUncommon) {
+      const rank = word.frequency_rank ?? Number.MAX_SAFE_INTEGER;
+      if (rank > commonCutoff) continue;
+    }
+    const band = levelBandByWordId.get(word.id);
+    if (!band) continue;
+    bandAvailability.set(band, (bandAvailability.get(band) ?? 0) + 1);
+  }
+
+  const paginate = (words: SuggestionWord[], page: number) => {
+    const totalPages = Math.max(1, Math.ceil(words.length / perPage));
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    const start = (safePage - 1) * perPage;
+    return {
+      page: safePage,
+      totalPages,
+      items: words.slice(start, start + perPage),
+    };
+  };
+
+  const masteredSlice = paginate(filteredMastered, masteredPage);
+  const workingSlice = paginate(filteredWorking, workingPage);
+  const stretchSlice = paginate(filteredStretch, stretchPage);
 
   const hasAnySection =
     filteredMastered.length > 0 ||
@@ -129,29 +219,66 @@ export default function ReadingLevelFilteredSections({
   return (
     <>
       <section className="rounded-2xl border border-[#efc8ab] bg-[#fffdf8] p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <label
-            htmlFor="reading-level-filter"
-            className="text-sm font-semibold uppercase tracking-wider text-[#5f4a37]"
-          >
-            Reading Level
-          </label>
-          <select
-            id="reading-level-filter"
-            value={maxReadingLevel}
-            onChange={(event) => setMaxReadingLevel(event.target.value)}
-            className="rounded-lg border border-[#e8b795] bg-white px-3 py-2 text-sm text-[#2f2a26] focus:border-[#2d78c4] focus:outline-none"
-          >
-            <option value="all">All levels</option>
-            <option value="1">Level 1 and below</option>
-            <option value="2">Level 2 and below</option>
-            <option value="3">Level 3 and below</option>
-            <option value="4">Level 4 and below</option>
-            <option value="5">Level 5 and below</option>
-            <option value="6">Level 6 and below</option>
-          </select>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <label
+              htmlFor="reading-level-filter"
+              className="text-sm font-semibold uppercase tracking-wider text-[#5f4a37]"
+            >
+              Difficulty Band
+            </label>
+            <select
+              id="reading-level-filter"
+              value={selectedBand}
+              onChange={(event) => handleBandChange(event.target.value)}
+              className="rounded-lg border border-[#e8b795] bg-white px-3 py-2 text-sm text-[#2f2a26] focus:border-[#2d78c4] focus:outline-none"
+            >
+              <option value="all">All bands</option>
+              {Array.from({ length: 20 }, (_, i) => i + 1).map((band) => {
+                const count = bandAvailability.get(band) ?? 0;
+                return (
+                  <option key={band} value={String(band)} disabled={count === 0}>
+                    Band {band} {count === 0 ? "(no words)" : `(${count})`}
+                  </option>
+                );
+              })}
+            </select>
+            <label className="inline-flex items-center gap-2 text-sm text-[#5f4a37]">
+              <input
+                type="checkbox"
+                checked={hideUncommon}
+                onChange={(event) =>
+                  handleHideUncommonChange(event.target.checked)
+                }
+                className="h-4 w-4 rounded border-[#e8b795]"
+              />
+              Hide uncommon words
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 20 }, (_, i) => i + 1).map((band) => {
+              const count = bandAvailability.get(band) ?? 0;
+              const disabled = count === 0;
+              const active = selectedBand === String(band);
+              return (
+                <button
+                  key={band}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => handleBandChange(String(band))}
+                  className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                    active
+                      ? "border-[#2d78c4] bg-[#eaf4ff] text-[#2d5f8f]"
+                      : "border-[#efc8ab] bg-white text-[#5f4a37]"
+                  } ${disabled ? "cursor-not-allowed opacity-40 blur-[1px]" : "hover:bg-[#fff5eb]"}`}
+                >
+                  {band}
+                </button>
+              );
+            })}
+          </div>
           <span className="text-xs text-[#7b6652]">
-            Saved on this device for this child.
+            Saved on this device for this child. Bands with no matching words are blurred.
           </span>
         </div>
       </section>
@@ -159,23 +286,98 @@ export default function ReadingLevelFilteredSections({
       <WordSection
         title="Mastered Words"
         subtitle="Words built from your child's top phonemes that are already mastered."
-        words={filteredMastered}
+        words={masteredSlice.items}
         tone="mastered"
       />
+      {filteredMastered.length > perPage ? (
+        <div className="mt-2 flex items-center gap-2 text-sm">
+          <button
+            type="button"
+            disabled={masteredSlice.page <= 1}
+            onClick={() => setMasteredPage((p) => Math.max(1, p - 1))}
+            className="rounded-md border border-[#efc8ab] bg-white px-2 py-1 disabled:opacity-40"
+          >
+            Prev
+          </button>
+          <span className="text-[#5f4a37]">
+            Mastered page {masteredSlice.page} / {masteredSlice.totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={masteredSlice.page >= masteredSlice.totalPages}
+            onClick={() =>
+              setMasteredPage((p) => Math.min(masteredSlice.totalPages, p + 1))
+            }
+            className="rounded-md border border-[#efc8ab] bg-white px-2 py-1 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      ) : null}
 
       <WordSection
         title="Working On Words"
         subtitle="Words that include top phonemes your child is currently practicing."
-        words={filteredWorking}
+        words={workingSlice.items}
         tone="working"
       />
+      {filteredWorking.length > perPage ? (
+        <div className="mt-2 flex items-center gap-2 text-sm">
+          <button
+            type="button"
+            disabled={workingSlice.page <= 1}
+            onClick={() => setWorkingPage((p) => Math.max(1, p - 1))}
+            className="rounded-md border border-[#efc8ab] bg-white px-2 py-1 disabled:opacity-40"
+          >
+            Prev
+          </button>
+          <span className="text-[#5f4a37]">
+            Working page {workingSlice.page} / {workingSlice.totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={workingSlice.page >= workingSlice.totalPages}
+            onClick={() =>
+              setWorkingPage((p) => Math.min(workingSlice.totalPages, p + 1))
+            }
+            className="rounded-md border border-[#efc8ab] bg-white px-2 py-1 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      ) : null}
 
       <WordSection
         title="Stretch Words"
         subtitle="Next challenge words using top phonemes with little or no direct practice yet."
-        words={filteredStretch}
+        words={stretchSlice.items}
         tone="stretch"
       />
+      {filteredStretch.length > perPage ? (
+        <div className="mt-2 flex items-center gap-2 text-sm">
+          <button
+            type="button"
+            disabled={stretchSlice.page <= 1}
+            onClick={() => setStretchPage((p) => Math.max(1, p - 1))}
+            className="rounded-md border border-[#efc8ab] bg-white px-2 py-1 disabled:opacity-40"
+          >
+            Prev
+          </button>
+          <span className="text-[#5f4a37]">
+            Stretch page {stretchSlice.page} / {stretchSlice.totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={stretchSlice.page >= stretchSlice.totalPages}
+            onClick={() =>
+              setStretchPage((p) => Math.min(stretchSlice.totalPages, p + 1))
+            }
+            className="rounded-md border border-[#efc8ab] bg-white px-2 py-1 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      ) : null}
 
       {!hasAnySection ? (
         <section className="rounded-3xl border border-[#efc8ab] bg-[#fffdf8] p-6 text-sm text-[#7b6652] shadow-sm">

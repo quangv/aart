@@ -186,7 +186,9 @@ function cefrToReadingLevel(cefr) {
 }
 
 function inferReadingLevelFromWordDifficulty(word) {
-  const w = String(word || "").toLowerCase().trim();
+  const w = String(word || "")
+    .toLowerCase()
+    .trim();
   if (!w) return 5;
 
   let levelByLength = 2;
@@ -248,7 +250,10 @@ function loadOxford3000WordsFromCsv() {
       .trim();
     const cefrLevel = cefrToReadingLevel(cols[cefrIndex]);
     const difficultyFloor = inferReadingLevelFromWordDifficulty(word);
-    const level = cefrLevel === null ? difficultyFloor : Math.max(cefrLevel, difficultyFloor);
+    const level =
+      cefrLevel === null
+        ? difficultyFloor
+        : Math.max(cefrLevel, difficultyFloor);
     const pos = normalizePartOfSpeech(posIndex >= 0 ? cols[posIndex] : "other");
 
     if (!word) {
@@ -1941,7 +1946,9 @@ const valueRows = [];
 let skipped = 0;
 const skippedList = [];
 
-for (const [word, pos, level] of deduped) {
+for (let i = 0; i < deduped.length; i++) {
+  const [word, pos, level] = deduped[i];
+  const frequencyRank = i + 1;
   const data = getWordData(word);
   if (!data) {
     skipped++;
@@ -1952,7 +1959,7 @@ for (const [word, pos, level] of deduped) {
   for (const { ipa, position } of data.mappings) {
     const esc = word.replace(/'/g, "''");
     valueRows.push(
-      `    (${sq(esc)}, ${sq(pos)}, ${level}, ${data.syllables}, ${sq(ipa)}, ${sq(position)})`,
+      `    (${sq(esc)}, ${sq(pos)}, ${level}, ${frequencyRank}, ${data.syllables}, ${sq(ipa)}, ${sq(position)})`,
     );
   }
 }
@@ -1973,7 +1980,7 @@ lines.push("");
 lines.push("begin;");
 lines.push("");
 lines.push(
-  "with mappings (word_text, part_of_speech, reading_level, syllables, sound_code, position) as (",
+  "with mappings (word_text, part_of_speech, reading_level, frequency_rank, syllables, sound_code, position) as (",
 );
 lines.push("  values");
 lines.push(valueRows.join(",\n"));
@@ -1981,18 +1988,22 @@ lines.push("),");
 lines.push("");
 lines.push("upsert_words as (");
 lines.push(
-  "  insert into public.words (text, reading_level, part_of_speech, syllables)",
+  "  insert into public.words (text, reading_level, part_of_speech, frequency_rank, syllables)",
 );
 lines.push("  select distinct");
 lines.push("    m.word_text,");
 lines.push("    m.reading_level::int,");
 lines.push("    m.part_of_speech::public.part_of_speech,");
+lines.push("    m.frequency_rank::int,");
 lines.push("    m.syllables::int");
 lines.push("  from mappings m");
 lines.push("  on conflict (text) do update");
 lines.push("    set");
 lines.push(
   "      reading_level = least(public.words.reading_level, excluded.reading_level),",
+);
+lines.push(
+  "      frequency_rank = least(coalesce(public.words.frequency_rank, excluded.frequency_rank), excluded.frequency_rank),",
 );
 lines.push("      part_of_speech = case");
 lines.push(

@@ -109,6 +109,7 @@ export type Database = {
           id: string;
           text: string;
           reading_level: number;
+          frequency_rank: number | null;
           part_of_speech: Database["public"]["Enums"]["part_of_speech"];
           syllables: number;
           created_at: string;
@@ -117,6 +118,7 @@ export type Database = {
           id?: string;
           text: string;
           reading_level?: number;
+          frequency_rank?: number | null;
           part_of_speech?: Database["public"]["Enums"]["part_of_speech"];
           syllables?: number;
           created_at?: string;
@@ -125,6 +127,7 @@ export type Database = {
           id?: string;
           text?: string;
           reading_level?: number;
+          frequency_rank?: number | null;
           part_of_speech?: Database["public"]["Enums"]["part_of_speech"];
           syllables?: number;
           created_at?: string;
