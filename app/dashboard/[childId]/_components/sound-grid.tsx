@@ -154,14 +154,12 @@ export default function SoundGrid({
                 const isMastered = positions.some(
                   (pos) => progressRecord[`${sound.id}:${pos}`]?.mastered,
                 );
-                const scoredValues = positions
-                  .map((pos) => progressRecord[`${sound.id}:${pos}`]?.score)
-                  .filter((score): score is number => score != null);
                 const avgScore =
-                  scoredValues.length > 0
-                    ? scoredValues.reduce((sum, score) => sum + score, 0) /
-                      scoredValues.length
-                    : null;
+                  positions
+                    .map(
+                      (pos) => progressRecord[`${sound.id}:${pos}`]?.score ?? 0,
+                    )
+                    .reduce((sum, score) => sum + score, 0) / 3;
 
                 return (
                   <PhonemeButton
