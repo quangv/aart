@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "algorithm": "sha256",
+  "generatedAt": "2026-03-25T03:56:05.855Z",
+  "migrationsDir": "supabase/migrations",
+  "fileCount": 17,
+  "hashes": {
+    "20260322000100_init.sql": "04e8f8ff967fecaebc3263a42f5ddfc9c7c40f4aeb9dfb0d8bc7eaa6eea34410",
+    "20260322000200_birth_date_month_year_only.sql": "4d118fbbfb71fcbc97fbc87165320ffbfe6fe0074d12c6c1eb2fca7fd917b5a1",
+    "20260322000300_profiles_self_insert_policy.sql": "250cae815d0cacb1a2081a0d45aace9b9c594d33e2de75463ec1b137a2bc620f",
+    "20260323000100_sound_stage_curriculum_39_phonemes.sql": "d29c45c0d086e75dc099f584bf818014517c1da688225952497f32e2cff4ccf0",
+    "20260323000200_split_early_vowels_into_two_stages.sql": "f148708da580b10fd9a3497c7f97984ae81cbfced54b2cf922c4bce9b6cc225b",
+    "20260323000300_repair_and_validate_sound_stages.sql": "77103762a6fb6fb17dd9fee53fc519f907692c30bedb620914b663ad0f18141a",
+    "20260324000100_seed_phoneme_position_examples.sql": "9c707a08985e8eb40fc63d4f8bb0787be257412145af9fe8f6387f86a4f42416",
+    "20260324000200_backfill_phoneme_position_examples.sql": "84313d36a0659aef142e714f433f4256d6095aee4e2f2f38cfa99a868800c88c",
+    "20260324000300_expand_phoneme_position_examples.sql": "c9672d2fe8828d28b4c44fbbee523e6dcbdaaa11099e285278a1ab86e601ab90",
+    "20260324000400_top_up_phoneme_position_examples_to_three.sql": "7d3abf139b8b0c3fc0838b28a11c098d2e2fe3a5883ef91b3c4f6c8e01629002",
+    "20260324000500_top_up_phoneme_position_examples_to_three_v2.sql": "0c04e1c85001a6d845cd9b661b1b8128d167bfd270522000f9f0da78df8dec2e",
+    "20260324000600_add_notes_to_child_sound_progress.sql": "c904398e806aafe97ccf8c6ae9f0186ce407e1e3ee7d5cf1d6a1674856c76d00",
+    "20260324000700_add_progress_records_history.sql": "4ef02bb15042143df1a0a959c412e15b7cc45c7278926dc009d60c2060319757",
+    "20260324000800_fix_progress_score_to_numeric.sql": "7748483f6f239ff572c3f8f95e1ea9297ad5829726492e368f8010449b1b3d79",
+    "20260324000900_progress_records_update_delete_policies.sql": "44da4c6aaaddf2801d594c2aa25a77ba29daf63b49686cccba6ff5fcd045228a",
+    "20260325000100_oxford_fry_word_corpus.sql": "d4d65b24eb885245089a33923f8859b01b64392fe4cb236195722bb40bd7f27d",
+    "20260325000200_add_dolch_sight_words.sql": "8f375caf306732383a6d23cf583e574819d7838ddf9b602954f1f5fd98f57a88"
+  }
+}

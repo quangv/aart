@@ -4,6 +4,63 @@ This directory contains Supabase configuration, schema definitions, and migratio
 
 ## Migration Best Practices
 
+## Migration Integrity Guard
+
+This project includes an automated migration integrity guard to prevent accidental edits to historical migrations.
+
+- Snapshot file: `supabase/migrations/_integrity.json`
+- Algorithm: SHA-256 per `supabase/migrations/*.sql`
+- Enforcement point: `npm run db:push` (local/prod wrappers)
+
+Workflow:
+
+1. `npm run db:migrations:verify` checks that previously snapshotted migration files are unchanged.
+2. `npm run db:push` applies pending migrations.
+3. `npm run db:migrations:snapshot` updates `_integrity.json` after a successful push.
+
+Allowed:
+
+- Add new migration files.
+
+Blocked:
+
+- Edit existing (already snapshotted) migration files.
+- Delete existing (already snapshotted) migration files.
+
+If verification fails:
+
+1. Revert edits to old migration files.
+2. Create a new migration file for the intended change.
+3. Re-run `npm run db:push`.
+
+Troubleshooting (copy/paste)
+
+```bash
+# See what changed under migrations
+git status --short supabase/migrations
+
+# Revert accidental edits to historical migrations
+git restore supabase/migrations/*.sql
+
+# Create a follow-up migration instead of editing old files
+npm run db:migration:new -- <fix_name>
+
+# Verify and push
+npm run db:push
+```
+
+If you only added new files, verification should pass. Check directly with:
+
+```bash
+npm run db:migrations:verify
+```
+
+Refresh the hash snapshot only after a successful push:
+
+```bash
+npm run db:migrations:snapshot
+```
+
 ### ✅ DO: Create a new migration file
 
 If you've already deployed a migration to production and need to make changes:
@@ -130,6 +187,12 @@ This keeps local and production aligned and preserves the migration audit trail.
 ```bash
 # Create a new migration
 npm run db:migration:new -- <description>
+
+# Verify migration integrity (old migrations unchanged)
+npm run db:migrations:verify
+
+# Refresh migration hash snapshot
+npm run db:migrations:snapshot
 
 # Apply pending migrations to production
 npm run db:push

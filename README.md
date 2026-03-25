@@ -118,6 +118,13 @@ Open `http://localhost:3000`.
 
 **⚠️ CRITICAL: Never edit a migration file after it's been deployed to production.** Always create a new migration file to fix issues or iterate on changes. Once a migration runs (or is recorded as attempted), it's locked in the `schema_migrations` table. Editing it breaks the contract between your local code and production history.
 
+This repo now enforces migration immutability with a hash snapshot guard:
+
+- `supabase/migrations/_integrity.json` stores SHA-256 hashes of migration files.
+- `npm run db:push` now verifies previously snapshotted migrations are unchanged before pushing.
+- If verification passes and push succeeds, hashes are re-snapshotted automatically.
+- New migration files are allowed; editing old migration files is blocked.
+
 This repo now includes a baseline migration at [supabase/migrations/20260322000100_init.sql](supabase/migrations/20260322000100_init.sql).
 
 If you see child insert foreign key errors for older accounts, apply latest migrations (including [supabase/migrations/20260322000300_profiles_self_insert_policy.sql](supabase/migrations/20260322000300_profiles_self_insert_policy.sql)).
@@ -132,6 +139,50 @@ npm run db:migration:new -- add_child_avatar
 
 # apply pending migrations to linked remote project
 npm run db:push
+```
+
+If integrity verification fails (because an old migration was edited/deleted):
+
+1. Revert changes to old migration files.
+2. Create a new migration for fixes.
+3. Run `npm run db:push` again.
+
+Troubleshooting: integrity check failed
+
+```bash
+# 1) inspect changed migration files
+git status --short supabase/migrations
+
+# 2) discard accidental edits to old migrations
+git restore supabase/migrations/*.sql
+
+# 3) create a new migration for the intended change
+npm run db:migration:new -- <fix_name>
+
+# 4) verify + push
+npm run db:push
+```
+
+If you intentionally added a brand new migration file and verification still fails, run:
+
+```bash
+npm run db:migrations:verify
+```
+
+Then only update the hash snapshot after a successful push:
+
+```bash
+npm run db:migrations:snapshot
+```
+
+Manual integrity commands:
+
+```bash
+# verify old migrations were not changed
+npm run db:migrations:verify
+
+# write/update migration hash snapshot
+npm run db:migrations:snapshot
 ```
 
 Useful commands:
