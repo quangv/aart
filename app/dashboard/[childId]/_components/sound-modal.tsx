@@ -3,136 +3,218 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
-function ScoreChart({
-  records,
+const positions = ["beginning", "middle", "end"] as const;
+type Position = (typeof positions)[number];
+
+type ChartRecord = { score: number; recorded_at: string };
+
+const positionColors: Record<Position, { line: string; dot: string }> = {
+  beginning: { line: "#2d78c4", dot: "#1f5f9c" },
+  middle: { line: "#d1782d", dot: "#b15f1e" },
+  end: { line: "#5f8c3b", dot: "#4f742f" },
+};
+
+function PositionScoreChart({
+  recordsByPosition,
+  visiblePositions = positions,
+  height = 108,
+  showLegend = true,
 }: {
-  records: { score: number; recorded_at: string }[];
+  recordsByPosition: Partial<Record<Position, ChartRecord[]>>;
+  visiblePositions?: Position[];
+  height?: number;
+  showLegend?: boolean;
 }) {
-  // oldest → newest
-  const sorted = [...records].reverse();
-  if (sorted.length === 0) return null;
+  const seriesByPosition = visiblePositions.reduce<
+    Partial<Record<Position, ChartRecord[]>>
+  >((acc, position) => {
+    // Records are newest-first in state; chart needs oldest-first.
+    acc[position] = [...(recordsByPosition[position] ?? [])].reverse();
+    return acc;
+  }, {});
+
+  const hasAny = visiblePositions.some(
+    (position) => (seriesByPosition[position]?.length ?? 0) > 0,
+  );
+  if (!hasAny) {
+    return (
+      <p className="px-2 py-3 text-[11px] text-[#7b6652]">
+        No score history yet.
+      </p>
+    );
+  }
 
   const W = 280;
-  const H = 72;
+  const H = height;
   const pad = { top: 6, right: 8, bottom: 18, left: 22 };
   const pw = W - pad.left - pad.right;
   const ph = H - pad.top - pad.bottom;
 
+  const maxLen = Math.max(
+    ...visiblePositions.map(
+      (position) => seriesByPosition[position]?.length ?? 0,
+    ),
+    1,
+  );
+
   const xOf = (i: number) =>
-    sorted.length === 1
-      ? pad.left + pw / 2
-      : pad.left + (i / (sorted.length - 1)) * pw;
+    maxLen === 1 ? pad.left + pw / 2 : pad.left + (i / (maxLen - 1)) * pw;
   const yOf = (s: number) => pad.top + ph - ((s - 1) / 9) * ph;
 
-  const points = sorted.map((r, i) => `${xOf(i)},${yOf(r.score)}`).join(" ");
-  const latest = sorted[sorted.length - 1];
-  const lx = xOf(sorted.length - 1);
-  const ly = yOf(latest.score);
-
   const gridScores = [1, 5, 10];
+  const allRecords = visiblePositions.flatMap(
+    (position) => seriesByPosition[position] ?? [],
+  );
+  const oldestRecord = allRecords.reduce<ChartRecord | null>(
+    (oldest, record) => {
+      if (!oldest) return record;
+      return new Date(record.recorded_at) < new Date(oldest.recorded_at)
+        ? record
+        : oldest;
+    },
+    null,
+  );
+  const latestRecord = allRecords.reduce<ChartRecord | null>(
+    (latest, record) => {
+      if (!latest) return record;
+      return new Date(record.recorded_at) > new Date(latest.recorded_at)
+        ? record
+        : latest;
+    },
+    null,
+  );
+
+  const dateLabel = (date?: string) => {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" aria-hidden="true">
-      {/* grid lines */}
-      {gridScores.map((s) => {
-        const y = yOf(s);
-        return (
-          <g key={s}>
-            <line
-              x1={pad.left}
-              y1={y}
-              x2={W - pad.right}
-              y2={y}
-              stroke="#f0e0d0"
-              strokeWidth="1"
-            />
-            <text
-              x={pad.left - 3}
-              y={y + 3.5}
-              textAnchor="end"
-              fontSize="7"
-              fill="#a08070"
-            >
-              {s}
-            </text>
-          </g>
-        );
-      })}
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" aria-hidden="true">
+        {/* grid lines */}
+        {gridScores.map((s) => {
+          const y = yOf(s);
+          return (
+            <g key={s}>
+              <line
+                x1={pad.left}
+                y1={y}
+                x2={W - pad.right}
+                y2={y}
+                stroke="#f0e0d0"
+                strokeWidth="1"
+              />
+              <text
+                x={pad.left - 3}
+                y={y + 3.5}
+                textAnchor="end"
+                fontSize="7"
+                fill="#a08070"
+              >
+                {s}
+              </text>
+            </g>
+          );
+        })}
 
-      {/* line */}
-      {sorted.length > 1 && (
-        <polyline
-          points={points}
-          fill="none"
-          stroke="#93c5e0"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-      )}
+        {/* one line per position */}
+        {visiblePositions.map((position) => {
+          const series = seriesByPosition[position] ?? [];
+          if (series.length === 0) return null;
+          const points = series
+            .map((r, i) => `${xOf(i)},${yOf(r.score)}`)
+            .join(" ");
+          const latest = series[series.length - 1];
+          const lx = xOf(series.length - 1);
+          const ly = yOf(latest.score);
 
-      {/* dots */}
-      {sorted.map((r, i) => {
-        const isLatest = i === sorted.length - 1;
-        return (
-          <circle
-            key={i}
-            cx={xOf(i)}
-            cy={yOf(r.score)}
-            r={isLatest ? 4 : 2.5}
-            fill={isLatest ? "#2d78c4" : "#efc8ab"}
-            stroke={isLatest ? "#2367aa" : "#c89060"}
-            strokeWidth="1"
-          />
-        );
-      })}
+          return (
+            <g key={position}>
+              {series.length > 1 ? (
+                <polyline
+                  points={points}
+                  fill="none"
+                  stroke={positionColors[position].line}
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                />
+              ) : null}
+              {series.map((r, i) => {
+                const isLatest = i === series.length - 1;
+                return (
+                  <circle
+                    key={`${position}-${i}`}
+                    cx={xOf(i)}
+                    cy={yOf(r.score)}
+                    r={isLatest ? 3.4 : 2.2}
+                    fill={isLatest ? positionColors[position].dot : "#efc8ab"}
+                    stroke={positionColors[position].line}
+                    strokeWidth="1"
+                  />
+                );
+              })}
+              <text
+                x={lx}
+                y={ly - 6}
+                textAnchor={lx > W - 30 ? "end" : lx < 30 ? "start" : "middle"}
+                fontSize="7"
+                fontWeight="bold"
+                fill={positionColors[position].line}
+              >
+                {latest.score}
+              </text>
+            </g>
+          );
+        })}
 
-      {/* latest score label */}
-      <text
-        x={lx}
-        y={ly - 7}
-        textAnchor={lx > W - 30 ? "end" : lx < 30 ? "start" : "middle"}
-        fontSize="8"
-        fontWeight="bold"
-        fill="#2d78c4"
-      >
-        {latest.score}
-      </text>
+        <text
+          x={pad.left}
+          y={H - 2}
+          textAnchor="start"
+          fontSize="7"
+          fill="#a08070"
+        >
+          {dateLabel(oldestRecord?.recorded_at)}
+        </text>
+        <text
+          x={W - pad.right}
+          y={H - 2}
+          textAnchor="end"
+          fontSize="7"
+          fill="#a08070"
+        >
+          {dateLabel(latestRecord?.recorded_at)}
+        </text>
+      </svg>
 
-      {/* x-axis date labels: first and last */}
-      {sorted.length > 1 && (
-        <>
-          <text
-            x={pad.left}
-            y={H - 2}
-            textAnchor="start"
-            fontSize="7"
-            fill="#a08070"
-          >
-            {new Date(sorted[0].recorded_at).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-            })}
-          </text>
-          <text
-            x={W - pad.right}
-            y={H - 2}
-            textAnchor="end"
-            fontSize="7"
-            fill="#a08070"
-          >
-            {new Date(latest.recorded_at).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-            })}
-          </text>
-        </>
-      )}
-    </svg>
+      {showLegend ? (
+        <div className="mt-1 flex flex-wrap gap-2">
+          {visiblePositions.map((position) => {
+            const latest = (seriesByPosition[position] ?? []).at(-1);
+            if (!latest) return null;
+            return (
+              <span
+                key={`legend-${position}`}
+                className="inline-flex items-center gap-1 rounded-full border border-[#f0e0d0] bg-white px-2 py-0.5 text-[10px] text-[#5f4a37]"
+              >
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: positionColors[position].line }}
+                  aria-hidden="true"
+                />
+                {position}: {latest.score}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
-
-const positions = ["beginning", "middle", "end"] as const;
-type Position = (typeof positions)[number];
 
 type ProgressRow = {
   score: number | null;
@@ -417,6 +499,13 @@ export default function SoundModal({
                   and notes.
                 </div>
 
+                <div className="mt-4 rounded-2xl border border-[#efc8ab] bg-white px-3 py-2">
+                  <p className="px-1 text-[10px] font-semibold uppercase tracking-wider text-[#7b6652]">
+                    All positions trend
+                  </p>
+                  <PositionScoreChart recordsByPosition={localHistory} />
+                </div>
+
                 <div className="mt-4 space-y-4">
                   {positions.map((position) => {
                     const row = localProgress[position];
@@ -531,7 +620,12 @@ export default function SoundModal({
                   {/* Score-over-time chart */}
                   {(localHistory[activePosition]?.length ?? 0) > 0 ? (
                     <div className="mt-3 rounded-xl bg-[#fffdf8] px-1 py-2">
-                      <ScoreChart records={localHistory[activePosition]!} />
+                      <PositionScoreChart
+                        recordsByPosition={localHistory}
+                        visiblePositions={[activePosition]}
+                        height={84}
+                        showLegend={false}
+                      />
                     </div>
                   ) : null}
 
