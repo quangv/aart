@@ -31,7 +31,8 @@
     "db:reset": "npm run db:reset:local",
     "db:push": "npm run db:push:prod",
     "db:pull": "npm run db:pull:prod",
-    "db:migration:new": "supabase migration new"
+    "db:migration:new": "supabase migration new",
+    "db:backup:prod": "bash -lc 'set -a && source .env.prod && set +a && bash scripts/backup-prod.sh'"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
