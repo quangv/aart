@@ -12,6 +12,18 @@ Aart helps parents track a child's articulation progress by sound position and g
 
 Planned production domain: `aart.autismarcade.com`
 
+## Screenshots
+
+### Sound Mastery by Position
+
+![Sound Mastery by Position — Stages 1–4](images/aart-stages1-4.png)
+
+![Sound Mastery by Position — Stages 5–10](images/aart-stages5-10.png)
+
+### Phoneme Mastery Ranking
+
+![Phoneme Mastery Ranking](images/aart-charts.png)
+
 ## Core Product Model
 
 The app stores:
